@@ -82,8 +82,8 @@ async def test_full_pipeline_happy_path(sample_genome):
     with patch("app.services.pipeline.resilient_llm_service.complete", new_callable=AsyncMock) as mock_complete:
         # Calls: Stage 2 Tone Transform, Stage 4 Grammar pass (Stage 1 is passthrough for raw draft)
         mock_complete.side_effect = [
-            LLMResult(text=stage2_mock, provider="groq_llama33", duration_ms=130.0),
-            LLMResult(text=stage4_mock, provider="groq_llama33", duration_ms=110.0),
+            LLMResult(text=stage2_mock, provider="groq_gpt_oss_120b", duration_ms=130.0),
+            LLMResult(text=stage4_mock, provider="groq_gpt_oss_120b", duration_ms=110.0),
         ]
 
         response: RewriteResponse = await pipeline.execute(
@@ -123,9 +123,9 @@ async def test_bullet_points_drafting_invokes_stage1_llm(sample_genome):
 
     with patch("app.services.pipeline.resilient_llm_service.complete", new_callable=AsyncMock) as mock_complete:
         mock_complete.side_effect = [
-            LLMResult(text=stage1_mock, provider="groq_llama33", duration_ms=100.0),
-            LLMResult(text=stage2_mock, provider="groq_llama33", duration_ms=120.0),
-            LLMResult(text=stage4_mock, provider="groq_llama33", duration_ms=90.0),
+            LLMResult(text=stage1_mock, provider="groq_gpt_oss_120b", duration_ms=100.0),
+            LLMResult(text=stage2_mock, provider="groq_gpt_oss_120b", duration_ms=120.0),
+            LLMResult(text=stage4_mock, provider="groq_gpt_oss_120b", duration_ms=90.0),
         ]
 
         response: RewriteResponse = await pipeline.execute(
@@ -160,9 +160,9 @@ async def test_meaning_check_retry_gate_triggers_on_drift(sample_genome):
 
     with patch("app.services.pipeline.resilient_llm_service.complete", new_callable=AsyncMock) as mock_complete:
         mock_complete.side_effect = [
-            LLMResult(text=drifted_stage2, provider="groq_llama33", duration_ms=110.0),  # Stage 2
-            LLMResult(text=corrected_stage3, provider="groq_llama33", duration_ms=140.0),     # Retry
-            LLMResult(text=stage4_out, provider="groq_llama33", duration_ms=95.0),       # Stage 4
+            LLMResult(text=drifted_stage2, provider="groq_gpt_oss_120b", duration_ms=110.0),  # Stage 2
+            LLMResult(text=corrected_stage3, provider="groq_gpt_oss_120b", duration_ms=140.0),     # Retry
+            LLMResult(text=stage4_out, provider="groq_gpt_oss_120b", duration_ms=95.0),       # Stage 4
         ]
 
         response: RewriteResponse = await pipeline.execute(
@@ -196,9 +196,9 @@ async def test_meaning_check_soft_warning_fallback(sample_genome):
 
     with patch("app.services.pipeline.resilient_llm_service.complete", new_callable=AsyncMock) as mock_complete:
         mock_complete.side_effect = [
-            LLMResult(text=drifted_unrelated, provider="groq_llama33", duration_ms=100.0),  # Stage 2
-            LLMResult(text=drifted_unrelated, provider="groq_llama33", duration_ms=110.0),        # Retry
-            LLMResult(text=drifted_unrelated, provider="groq_llama33", duration_ms=90.0),   # Stage 4
+            LLMResult(text=drifted_unrelated, provider="groq_gpt_oss_120b", duration_ms=100.0),  # Stage 2
+            LLMResult(text=drifted_unrelated, provider="groq_gpt_oss_120b", duration_ms=110.0),        # Retry
+            LLMResult(text=drifted_unrelated, provider="groq_gpt_oss_120b", duration_ms=90.0),   # Stage 4
         ]
 
         response: RewriteResponse = await pipeline.execute(
@@ -233,8 +233,8 @@ async def test_punctuation_quirks_preservation(sample_genome):
 
     with patch("app.services.pipeline.resilient_llm_service.complete", new_callable=AsyncMock) as mock_complete:
         mock_complete.side_effect = [
-            LLMResult(text=text_with_quirks, provider="groq_llama33", duration_ms=90.0),
-            LLMResult(text=text_with_quirks, provider="groq_llama33", duration_ms=90.0),
+            LLMResult(text=text_with_quirks, provider="groq_gpt_oss_120b", duration_ms=90.0),
+            LLMResult(text=text_with_quirks, provider="groq_gpt_oss_120b", duration_ms=90.0),
         ]
 
         response: RewriteResponse = await pipeline.execute(

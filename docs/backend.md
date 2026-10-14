@@ -11,8 +11,8 @@
 InkFlow Backend (FastAPI on Render.com)
 ├── Runtime: Python 3.11+ / FastAPI / Uvicorn (async event loop)
 ├── Data Layer: MongoDB Atlas (via Motor async driver)
-├── Primary Model: llama-3.3-70b-versatile (Groq Cloud API, deep reasoning, high fidelity)
-├── Fallback Model: llama-3.1-8b-instant (Groq Cloud API, blazing fast instant failover)
+├── Primary Model: openai/gpt-oss-120b (Groq Cloud API, deep reasoning, high fidelity)
+├── Fallback Model: openai/gpt-oss-20b (Groq Cloud API, blazing fast instant failover)
 ├── Auth Layer: Firebase Admin SDK (token verification middleware)
 ├── Payments: Razorpay Python SDK (Orders, Payment Verification, Webhooks)
 └── Monitoring: Sentry Python SDK (sentry-sdk[fastapi] with Agent Tracing)
@@ -76,8 +76,8 @@ backend/
 ### Primary vs Fallback Matrix
 | Role | Model Identifier | Host / Runtime | Connection Timeout | Read Timeout | Provider Tag |
 | :--- | :--- | :--- | :--- | :--- | :--- |
-| **Primary** | `llama-3.3-70b-versatile` | Groq Cloud API | **2.5s** (fail-fast on network latency) | **9.0s** (active inference) | `groq_llama33` |
-| **Fallback** | `llama-3.1-8b-instant` | Groq Cloud API | **2.0s** | **8.0s** (sub-second instant) | `groq_llama31_8b` |
+| **Primary** | `openai/gpt-oss-120b` | Groq Cloud API | **2.5s** (fail-fast on network latency) | **9.0s** (active inference) | `groq_gpt_oss_120b` |
+| **Fallback** | `openai/gpt-oss-20b` | Groq Cloud API | **2.0s** | **8.0s** (sub-second instant) | `groq_gpt_oss_20b` |
 
 ### Implementation Contract (`app/services/providers.py`)
 ```python
@@ -94,15 +94,15 @@ async def generate_llm_completion(
     max_tokens: int = 1024
 ) -> tuple[str, str]:
     """
-    Attempts Groq Llama 3.3 70B first. If connection fails or times out,
-    transparently falls back to Groq Llama 3.1 8B.
+    Attempts Groq openai/gpt-oss-120b first. If connection fails or times out,
+    transparently falls back to Groq openai/gpt-oss-20b.
     Returns: (generated_text, provider_tag)
     """
     groq_base = settings.GROQ_BASE_URL.rstrip("/")
     groq_url = f"{groq_base}/chat/completions" if groq_base.endswith("/v1") else f"{groq_base}/v1/chat/completions"
     headers = {"Authorization": f"Bearer {settings.GROQ_API_KEY}"}
 
-    # 1. Attempt Primary (Groq Llama 3.3 70B Versatile)
+    # 1. Attempt Primary (Groq openai/gpt-oss-120b)
     try:
         async with httpx.AsyncClient(timeout=PRIMARY_TIMEOUT) as client:
             response = await client.post(
@@ -118,16 +118,16 @@ async def generate_llm_completion(
             response.raise_for_status()
             data = response.json()
             content = data["choices"][0]["message"]["content"]
-            sentry_sdk.set_tag("llm.provider", "groq_llama33")
-            return content, "groq_llama33"
+            sentry_sdk.set_tag("llm.provider", "groq_gpt_oss_120b")
+            return content, "groq_gpt_oss_120b"
 
     except (httpx.ConnectError, httpx.TimeoutException, httpx.HTTPStatusError, httpx.RequestError) as exc:
         sentry_sdk.capture_message(
-            f"Primary Groq Llama 3.3 failed ({type(exc).__name__}). Failing over to Llama 3.1 8B.",
+            f"Primary Groq openai/gpt-oss-120b failed ({type(exc).__name__}). Failing over to openai/gpt-oss-20b.",
             level="warning"
         )
 
-    # 2. Resilient Fallback (Groq Llama 3.1 8B Instant)
+    # 2. Resilient Fallback (Groq openai/gpt-oss-20b)
     try:
         async with httpx.AsyncClient(timeout=FALLBACK_TIMEOUT) as client:
             response = await client.post(
@@ -143,8 +143,8 @@ async def generate_llm_completion(
             response.raise_for_status()
             data = response.json()
             content = data["choices"][0]["message"]["content"]
-            sentry_sdk.set_tag("llm.provider", "groq_llama31_8b")
-            return content, "groq_llama31_8b"
+            sentry_sdk.set_tag("llm.provider", "groq_gpt_oss_20b")
+            return content, "groq_gpt_oss_20b"
 
     except Exception as exc:
         sentry_sdk.capture_exception(exc)
@@ -413,7 +413,7 @@ Check Recurrence Pattern
   "meaningWarning": null,
   "userEdited": true,
   "acceptedAt": "ISODate",
-  "provider": "groq_llama33 | groq_llama31_8b",
+  "provider": "groq_gpt_oss_120b | groq_gpt_oss_20b",
   "evalScores": {
     "slopReductionScore": 94.2,
     "styleAlignmentScore": 87.5,

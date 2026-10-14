@@ -8,14 +8,14 @@ This module implements high-availability, two-tier LLM completion orchestration
 using the Groq API:
 
 Primary vs Fallback Matrix:
-- Primary Provider: llama-3.3-70b-versatile via Groq Cloud API
+- Primary Provider: openai/gpt-oss-120b via Groq Cloud API
   Connect Timeout: 2.5s (fail-fast on network latency/unreachable gateway)
   Read Timeout: 9.0s (active inference limit)
-  Provider Tag: 'groq_llama33'
-- Fallback Provider: llama-3.1-8b-instant via Groq Cloud API
+  Provider Tag: 'groq_gpt_oss_120b'
+- Fallback Provider: openai/gpt-oss-20b via Groq Cloud API
   Connect Timeout: 2.0s
   Read Timeout: 8.0s (sub-second instant generation)
-  Provider Tag: 'groq_llama31_8b'
+  Provider Tag: 'groq_gpt_oss_20b'
 
 Telemetry and Monitoring:
 - Automatically injects Sentry tags ('llm.provider') and captures failover warning events.
@@ -55,7 +55,7 @@ class LLMResult(BaseModel):
     
     Attributes:
         text: Raw generated or transformed output from the language model.
-        provider: Provider identifier ('groq_llama33' or 'groq_llama31_8b').
+        provider: Provider identifier ('groq_gpt_oss_120b' or 'groq_gpt_oss_20b').
         duration_ms: Wall-clock duration of the request in milliseconds.
     """
     text: str
@@ -76,8 +76,8 @@ async def generate_llm_completion(
     max_tokens: int = 1024,
 ) -> Tuple[str, str]:
     """
-    Attempts Groq Llama 3.3 70B first. If connection fails or times out,
-    transparently falls back to Groq Llama 3.1 8B.
+    Attempts Groq openai/gpt-oss-120b first. If connection fails or times out,
+    transparently falls back to Groq openai/gpt-oss-20b.
     
     Args:
         messages: List of message dictionaries with 'role' and 'content'.
@@ -95,7 +95,7 @@ async def generate_llm_completion(
     headers = {"Authorization": f"Bearer {settings.GROQ_API_KEY}"}
 
     # --------------------------------------------------------------------------
-    # 1. Attempt Primary: Groq Llama 3.3 70B Versatile
+    # 1. Attempt Primary: Groq openai/gpt-oss-120b
     # --------------------------------------------------------------------------
     try:
         async with httpx.AsyncClient(timeout=PRIMARY_TIMEOUT) as client:
@@ -113,10 +113,10 @@ async def generate_llm_completion(
             data = response.json()
             content = data["choices"][0]["message"]["content"].strip()
             try:
-                sentry_sdk.set_tag("llm.provider", "groq_llama33")
+                sentry_sdk.set_tag("llm.provider", "groq_gpt_oss_120b")
             except Exception:
                 pass
-            return content, "groq_llama33"
+            return content, "groq_gpt_oss_120b"
 
     except (httpx.ConnectError, httpx.TimeoutException, httpx.HTTPStatusError, httpx.RequestError) as exc:
         is_429 = isinstance(exc, httpx.HTTPStatusError) and exc.response.status_code == 429
@@ -125,27 +125,27 @@ async def generate_llm_completion(
                 sentry_sdk.set_tag("error.type", "groq_rate_limit_429")
                 sentry_sdk.set_tag("llm.rate_limit_hit", "true")
                 sentry_sdk.capture_message(
-                    "CRITICAL: Groq API Rate Limit (HTTP 429) encountered on Primary (llama-3.3-70b-versatile). Shared key pool may be exhausted.",
+                    "CRITICAL: Groq API Rate Limit (HTTP 429) encountered on Primary (openai/gpt-oss-120b). Shared key pool may be exhausted.",
                     level="error",
                 )
             except Exception:
                 pass
 
         logger.warning(
-            "Primary Groq Llama 3.3 failed (%s: %s). Failing over to Groq Llama 3.1 8B.",
+            "Primary Groq openai/gpt-oss-120b failed (%s: %s). Failing over to Groq openai/gpt-oss-20b.",
             type(exc).__name__,
             exc,
         )
         try:
             sentry_sdk.capture_message(
-                f"Primary Groq Llama 3.3 failed ({type(exc).__name__}). Failing over to Llama 3.1 8B.",
+                f"Primary Groq openai/gpt-oss-120b failed ({type(exc).__name__}). Failing over to openai/gpt-oss-20b.",
                 level="warning",
             )
         except Exception:
             pass
 
     # --------------------------------------------------------------------------
-    # 2. Resilient Fallback: Groq Llama 3.1 8B Instant
+    # 2. Resilient Fallback: Groq openai/gpt-oss-20b
     # --------------------------------------------------------------------------
     try:
         async with httpx.AsyncClient(timeout=FALLBACK_TIMEOUT) as client:
@@ -163,10 +163,10 @@ async def generate_llm_completion(
             data = response.json()
             content = data["choices"][0]["message"]["content"].strip()
             try:
-                sentry_sdk.set_tag("llm.provider", "groq_llama31_8b")
+                sentry_sdk.set_tag("llm.provider", "groq_gpt_oss_20b")
             except Exception:
                 pass
-            return content, "groq_llama31_8b"
+            return content, "groq_gpt_oss_20b"
 
     except Exception as exc:
         is_429 = isinstance(exc, httpx.HTTPStatusError) and exc.response.status_code == 429
@@ -175,13 +175,13 @@ async def generate_llm_completion(
                 sentry_sdk.set_tag("error.type", "groq_rate_limit_429")
                 sentry_sdk.set_tag("llm.rate_limit_hit", "true")
                 sentry_sdk.capture_message(
-                    "CRITICAL: Groq API Rate Limit (HTTP 429) encountered on Fallback (llama-3.1-8b-instant). Shared API key pool completely exhausted.",
+                    "CRITICAL: Groq API Rate Limit (HTTP 429) encountered on Fallback (openai/gpt-oss-20b). Shared API key pool completely exhausted.",
                     level="error",
                 )
             except Exception:
                 pass
 
-        logger.error("Fallback Groq Llama 3.1 8B also failed: %s", exc)
+        logger.error("Fallback Groq openai/gpt-oss-20b also failed: %s", exc)
         try:
             sentry_sdk.capture_exception(exc)
         except Exception:
@@ -213,12 +213,12 @@ class ResilientLLMService:
             text = await self._call_primary(messages, temperature, max_tokens)
             elapsed_ms = (time.monotonic() - t0) * 1000.0
             try:
-                sentry_sdk.set_tag("llm.provider", "groq_llama33")
+                sentry_sdk.set_tag("llm.provider", "groq_gpt_oss_120b")
             except Exception:
                 pass
             return LLMResult(
                 text=text,
-                provider="groq_llama33",
+                provider="groq_gpt_oss_120b",
                 duration_ms=round(elapsed_ms, 2),
             )
         except (httpx.ConnectTimeout, httpx.ReadTimeout, httpx.HTTPStatusError, httpx.RequestError) as exc:
@@ -228,15 +228,15 @@ class ResilientLLMService:
                     sentry_sdk.set_tag("error.type", "groq_rate_limit_429")
                     sentry_sdk.set_tag("llm.rate_limit_hit", "true")
                     sentry_sdk.capture_message(
-                        "CRITICAL: Groq API Rate Limit (HTTP 429) encountered on Primary (llama-3.3-70b-versatile). Shared key pool may be exhausted.",
+                        "CRITICAL: Groq API Rate Limit (HTTP 429) encountered on Primary (openai/gpt-oss-120b). Shared key pool may be exhausted.",
                         level="error",
                     )
                 except Exception:
                     pass
-            logger.warning("Primary failed (%s). Failing over to Groq Llama 3.1 8B.", type(exc).__name__)
+            logger.warning("Primary failed (%s). Failing over to Groq openai/gpt-oss-20b.", type(exc).__name__)
             try:
                 sentry_sdk.capture_message(
-                    f"Primary Groq Llama 3.3 failed ({type(exc).__name__}). Failing over to Llama 3.1 8B.",
+                    f"Primary Groq openai/gpt-oss-120b failed ({type(exc).__name__}). Failing over to openai/gpt-oss-20b.",
                     level="warning",
                 )
             except Exception:
@@ -248,12 +248,12 @@ class ResilientLLMService:
             text = await self._call_fallback(messages, temperature, max_tokens)
             elapsed_ms = (time.monotonic() - t0) * 1000.0
             try:
-                sentry_sdk.set_tag("llm.provider", "groq_llama31_8b")
+                sentry_sdk.set_tag("llm.provider", "groq_gpt_oss_20b")
             except Exception:
                 pass
             return LLMResult(
                 text=text,
-                provider="groq_llama31_8b",
+                provider="groq_gpt_oss_20b",
                 duration_ms=round(elapsed_ms, 2),
             )
         except Exception as exc:
@@ -263,7 +263,7 @@ class ResilientLLMService:
                     sentry_sdk.set_tag("error.type", "groq_rate_limit_429")
                     sentry_sdk.set_tag("llm.rate_limit_hit", "true")
                     sentry_sdk.capture_message(
-                        "CRITICAL: Groq API Rate Limit (HTTP 429) encountered on Fallback (llama-3.1-8b-instant). Shared API key pool completely exhausted.",
+                        "CRITICAL: Groq API Rate Limit (HTTP 429) encountered on Fallback (openai/gpt-oss-20b). Shared API key pool completely exhausted.",
                         level="error",
                     )
                 except Exception:
@@ -280,7 +280,7 @@ class ResilientLLMService:
         temperature: float,
         max_tokens: int,
     ) -> str:
-        """Calls Groq Cloud Llama 3.3 70B primary endpoint."""
+        """Calls Groq Cloud openai/gpt-oss-120b primary endpoint."""
         groq_base = settings.GROQ_BASE_URL.rstrip("/")
         groq_url = f"{groq_base}/chat/completions" if groq_base.endswith("/v1") else f"{groq_base}/v1/chat/completions"
 
@@ -305,7 +305,7 @@ class ResilientLLMService:
         temperature: float,
         max_tokens: int,
     ) -> str:
-        """Calls Groq Cloud Llama 3.1 8B fallback endpoint."""
+        """Calls Groq Cloud openai/gpt-oss-20b fallback endpoint."""
         groq_base = settings.GROQ_BASE_URL.rstrip("/")
         groq_url = f"{groq_base}/chat/completions" if groq_base.endswith("/v1") else f"{groq_base}/v1/chat/completions"
 

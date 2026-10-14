@@ -61,8 +61,8 @@ async def test_em_dash_invariant_preserved(sample_genome):
 
     with patch("app.services.pipeline.resilient_llm_service.complete", new_callable=AsyncMock) as mock_complete:
         mock_complete.side_effect = [
-            LLMResult(text=input_text, provider="groq_llama33", duration_ms=80.0),
-            LLMResult(text=input_text, provider="groq_llama33", duration_ms=75.0),
+            LLMResult(text=input_text, provider="groq_gpt_oss_120b", duration_ms=80.0),
+            LLMResult(text=input_text, provider="groq_gpt_oss_120b", duration_ms=75.0),
         ]
 
         response: RewriteResponse = await pipeline.execute(
@@ -87,8 +87,8 @@ async def test_oxford_comma_and_semicolon_preserved(sample_genome):
 
     with patch("app.services.pipeline.resilient_llm_service.complete", new_callable=AsyncMock) as mock_complete:
         mock_complete.side_effect = [
-            LLMResult(text=input_text, provider="groq_llama33", duration_ms=80.0),
-            LLMResult(text=input_text, provider="groq_llama33", duration_ms=75.0),
+            LLMResult(text=input_text, provider="groq_gpt_oss_120b", duration_ms=80.0),
+            LLMResult(text=input_text, provider="groq_gpt_oss_120b", duration_ms=75.0),
         ]
 
         response: RewriteResponse = await pipeline.execute(
@@ -113,8 +113,8 @@ async def test_parenthetical_remarks_preserved(sample_genome):
 
     with patch("app.services.pipeline.resilient_llm_service.complete", new_callable=AsyncMock) as mock_complete:
         mock_complete.side_effect = [
-            LLMResult(text=input_text, provider="groq_llama33", duration_ms=80.0),
-            LLMResult(text=input_text, provider="groq_llama33", duration_ms=75.0),
+            LLMResult(text=input_text, provider="groq_gpt_oss_120b", duration_ms=80.0),
+            LLMResult(text=input_text, provider="groq_gpt_oss_120b", duration_ms=75.0),
         ]
 
         response: RewriteResponse = await pipeline.execute(

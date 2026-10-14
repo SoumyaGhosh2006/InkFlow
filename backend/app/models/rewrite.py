@@ -175,7 +175,7 @@ class RewriteResponse(BaseModel):
     finalOutput: str = Field(..., description="Anti-slop rewritten output text.")
     meaningCheckFailed: bool = Field(default=False, description="Soft warning flag for meaning drift.")
     meaningWarning: Optional[str] = Field(default=None, description="Amber warning badge text if failed.")
-    provider: str = Field(..., description="LLM provider: 'groq_llama33' or 'groq_llama31_8b'.")
+    provider: str = Field(..., description="LLM provider: 'groq_gpt_oss_120b' or 'groq_gpt_oss_20b'.")
     evalScores: EvalsReport = Field(..., description="Evaluations report.")
     stageOutputs: Optional[StageOutputs] = Field(default=None, description="Detailed stage outputs.")
     stages: List[RewriteStageLog] = Field(default_factory=list, description="Telemetry logs.")

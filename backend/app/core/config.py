@@ -39,8 +39,8 @@ class Settings(BaseSettings):
         MONGODB_DB_NAME: Active database namespace for user, genome, and logs storage.
         GROQ_BASE_URL: Base URL for Groq OpenAI-compatible API gateway.
         GROQ_API_KEY: Authentication bearer token for Groq API.
-        GROQ_PRIMARY_MODEL: Primary model identifier (llama-3.3-70b-versatile).
-        GROQ_FALLBACK_MODEL: Fallback model identifier (llama-3.1-8b-instant).
+        GROQ_PRIMARY_MODEL: Primary model identifier (openai/gpt-oss-120b).
+        GROQ_FALLBACK_MODEL: Fallback model identifier (openai/gpt-oss-20b).
         PRIMARY_CONNECT_TIMEOUT: Granular connect timeout for primary inference (2.5s).
         PRIMARY_READ_TIMEOUT: Maximum time allowed to stream/generate tokens (9.0s).
         FALLBACK_CONNECT_TIMEOUT: Connect timeout for secondary provider (2.0s).
@@ -70,15 +70,15 @@ class Settings(BaseSettings):
     MONGODB_DB_NAME: str = "inkflow"
 
     # --- Two-Tier Groq Provider Setup ---
-    # Primary: Llama 3.3 70B Versatile (nuanced tone transfer, high stylistic precision)
-    # Fallback: Llama 3.1 8B Instant (blazing fast, resilient backup)
+    # Primary: openai/gpt-oss-120b (deep reasoning, high stylistic precision)
+    # Fallback: openai/gpt-oss-20b (blazing fast, resilient backup)
     GROQ_BASE_URL: str = "https://api.groq.com/openai/v1"
     GROQ_API_KEY: str = ""
-    GROQ_PRIMARY_MODEL: str = "llama-3.3-70b-versatile"
-    GROQ_FALLBACK_MODEL: str = "llama-3.1-8b-instant"
+    GROQ_PRIMARY_MODEL: str = "openai/gpt-oss-120b"
+    GROQ_FALLBACK_MODEL: str = "openai/gpt-oss-20b"
 
     # Backward compatibility alias
-    GROQ_MODEL: str = "llama-3.3-70b-versatile"
+    GROQ_MODEL: str = "openai/gpt-oss-120b"
 
     # Granular timeouts
     PRIMARY_CONNECT_TIMEOUT: float = 2.5

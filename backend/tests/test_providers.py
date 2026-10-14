@@ -36,8 +36,8 @@ from app.services.providers import (
 @pytest.mark.asyncio
 async def test_primary_provider_success():
     """
-    Verifies that when primary Groq Llama 3.3 responds successfully,
-    the result is properly tagged as 'groq_llama33'.
+    Verifies that when primary Groq openai/gpt-oss-120b responds successfully,
+    the result is properly tagged as 'groq_gpt_oss_120b'.
     """
     service = ResilientLLMService()
     expected_output = "Clear and punchy authentic text without any slop."
@@ -49,7 +49,7 @@ async def test_primary_provider_success():
         result: LLMResult = await service.complete([{"role": "user", "content": "Hello"}])
 
         assert result.text == expected_output
-        assert result.provider == "groq_llama33"
+        assert result.provider == "groq_gpt_oss_120b"
         assert result.duration_ms >= 0.0
         mock_primary.assert_awaited_once()
         mock_fallback.assert_not_called()
@@ -59,10 +59,10 @@ async def test_primary_provider_success():
 async def test_primary_connect_timeout_failover_to_fallback():
     """
     Verifies that when the primary model times out during TCP handshake (connect timeout),
-    the service immediately fails over to Groq Llama 3.1 8B and tags output as 'groq_llama31_8b'.
+    the service immediately fails over to Groq openai/gpt-oss-20b and tags output as 'groq_gpt_oss_20b'.
     """
     service = ResilientLLMService()
-    fallback_output = "Fallback text generated swiftly by Groq Llama 3.1 8B."
+    fallback_output = "Fallback text generated swiftly by Groq openai/gpt-oss-20b."
 
     with patch.object(service, "_call_primary", new_callable=AsyncMock) as mock_primary, \
          patch.object(service, "_call_fallback", new_callable=AsyncMock) as mock_fallback:
@@ -72,7 +72,7 @@ async def test_primary_connect_timeout_failover_to_fallback():
         result: LLMResult = await service.complete([{"role": "user", "content": "Test"}])
 
         assert result.text == fallback_output
-        assert result.provider == "groq_llama31_8b"
+        assert result.provider == "groq_gpt_oss_20b"
         mock_primary.assert_awaited_once()
         mock_fallback.assert_awaited_once()
 
@@ -81,20 +81,20 @@ async def test_primary_connect_timeout_failover_to_fallback():
 async def test_primary_read_timeout_failover_to_fallback():
     """
     Verifies that when the primary model hangs on generation (read timeout > 9.0s),
-    the request seamlessly routes to Groq Llama 3.1 8B.
+    the request seamlessly routes to Groq openai/gpt-oss-20b.
     """
     service = ResilientLLMService()
     fallback_output = "Groq output succeeding after primary read timeout."
 
     with patch.object(service, "_call_primary", new_callable=AsyncMock) as mock_primary, \
          patch.object(service, "_call_fallback", new_callable=AsyncMock) as mock_fallback:
-        mock_primary.side_effect = httpx.ReadTimeout("Llama 3.3 read timeout > 9.0s")
+        mock_primary.side_effect = httpx.ReadTimeout("Primary read timeout > 9.0s")
         mock_fallback.return_value = fallback_output
 
         result: LLMResult = await service.complete([{"role": "user", "content": "Test"}])
 
         assert result.text == fallback_output
-        assert result.provider == "groq_llama31_8b"
+        assert result.provider == "groq_gpt_oss_20b"
         mock_primary.assert_awaited_once()
         mock_fallback.assert_awaited_once()
 
@@ -119,7 +119,7 @@ async def test_primary_http_error_failover():
         result: LLMResult = await service.complete([{"role": "user", "content": "Test"}])
 
         assert result.text == fallback_output
-        assert result.provider == "groq_llama31_8b"
+        assert result.provider == "groq_gpt_oss_20b"
         mock_primary.assert_awaited_once()
         mock_fallback.assert_awaited_once()
 
@@ -127,7 +127,7 @@ async def test_primary_http_error_failover():
 @pytest.mark.asyncio
 async def test_both_providers_fail_raises_llm_provider_error():
     """
-    Verifies that when BOTH primary (70B) and fallback (8B) fail,
+    Verifies that when BOTH primary (120B) and fallback (20B) fail,
     the service cleanly raises an LLMProviderError.
     """
     service = ResilientLLMService()
@@ -166,7 +166,7 @@ async def test_generate_llm_completion_contract():
         )
 
         assert text == "Sample generated text"
-        assert provider == "groq_llama33"
+        assert provider == "groq_gpt_oss_120b"
 
 
 @pytest.mark.asyncio
@@ -191,13 +191,13 @@ async def test_groq_429_rate_limit_triggers_sentry_alert():
 
         result = await service.complete([{"role": "user", "content": "Test"}])
 
-        assert result.provider == "groq_llama31_8b"
+        assert result.provider == "groq_gpt_oss_20b"
         # Verify Sentry was tagged with rate limit error type
         mock_set_tag.assert_any_call("error.type", "groq_rate_limit_429")
         mock_set_tag.assert_any_call("llm.rate_limit_hit", "true")
         # Verify critical Sentry message was captured
         mock_capture_message.assert_any_call(
-            "CRITICAL: Groq API Rate Limit (HTTP 429) encountered on Primary (llama-3.3-70b-versatile). Shared key pool may be exhausted.",
+            "CRITICAL: Groq API Rate Limit (HTTP 429) encountered on Primary (openai/gpt-oss-120b). Shared key pool may be exhausted.",
             level="error",
         )
 

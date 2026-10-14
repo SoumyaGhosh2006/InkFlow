@@ -58,11 +58,15 @@ async def connect_to_mongo() -> None:
             minPoolSize=5,
             serverSelectionTimeoutMS=5000,
         )
-        mongo_manager.db = mongo_manager.client[settings.MONGODB_DB_NAME]
+        # Resolve active database: use database from URI if specified, fallback to MONGODB_DB_NAME
+        try:
+            mongo_manager.db = mongo_manager.client.get_default_database()
+        except Exception:
+            mongo_manager.db = mongo_manager.client[settings.MONGODB_DB_NAME]
 
         # Verify connectivity using the ping command
         await mongo_manager.db.command("ping")
-        logger.info("Successfully established connection to MongoDB database: %s", settings.MONGODB_DB_NAME)
+        logger.info("Successfully established connection to MongoDB database: %s", mongo_manager.db.name)
 
         # Idempotently build required database indexes
         await _init_db_indexes(mongo_manager.db)

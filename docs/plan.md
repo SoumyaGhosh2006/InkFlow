@@ -40,9 +40,9 @@ flowchart TD
         B_Sentry["Sentry Agent Tracing & Error Logger"]
     end
 
-    subgraph OpenAI_Tier["Open-Weight Model Layer"]
-        M_Primary["Primary: google/gemma-2-9b-it<br/>(DigitalOcean GPU Droplet 1-Click Model)"]
-        M_Fallback["Fallback: llama-3.3-70b-versatile<br/>(Groq Cloud API)"]
+    subgraph Groq_Tier["Two-Tier Groq Model Layer"]
+        M_Primary["Primary: openai/gpt-oss-120b<br/>(Groq Cloud API, 120B reasoning)"]
+        M_Fallback["Fallback: openai/gpt-oss-20b<br/>(Groq Cloud API, fast failover)"]
     end
 
     subgraph Storage["Data Tier (MongoDB Atlas)"]
@@ -88,7 +88,7 @@ As agreed, the project is structured with clear ownership:
 *Owner: User*
 - [ ] Initialize Python environment, `requirements.txt`, and FastAPI structure.
 - [ ] Implement `app/core/config.py` and MongoDB Atlas connection via Motor.
-- [ ] Build resilient `generate_llm_completion()` with DigitalOcean Gemma 2 primary (`connect=2.5s`, `read=9.0s`) and Groq Llama 3.3 fallback.
+- [ ] Build resilient `generate_llm_completion()` with Groq `openai/gpt-oss-120b` primary (`connect=2.5s`, `read=9.0s`) and Groq `openai/gpt-oss-20b` fallback.
 - [ ] Build 4-stage sequential pipeline with reason-aware Stage 3 retry and soft warning fallback.
 - [ ] Build lazy weekly quota reset engine (`wordsUsedThisWeek` / `weeklyWordLimit`).
 - [ ] Implement noise-resistant adaptive learning engine ($\ge 3$ cross-session recurrence).
@@ -111,8 +111,8 @@ As agreed, the project is structured with clear ownership:
 
 | Identified Risk | Severity | Engineered Mitigation |
 | :--- | :--- | :--- |
-| **DigitalOcean GPU Droplet Cold/Offline** | Medium | Resilient client automatically fails fast (`connect=2.5s`) to Groq Llama 3.3, logging a warning to Sentry without disrupting the user. |
-| **Slow Gemma Inference Latency (6–9s)** | Low | Progressive loading state cycles honest micro-copy ("Matching cadence...", "Injecting voice...", "Verifying facts..."), turning wait time into perceived craftsmanship. |
+| **Primary Groq 120B Model Latency / Unreachable** | Medium | Resilient client automatically fails fast (`connect=2.5s`) to Groq `openai/gpt-oss-20b`, logging a warning to Sentry without disrupting the user. |
+| **Model Generation Time (2–4s)** | Low | Progressive loading state cycles honest micro-copy ("Matching cadence...", "Injecting voice...", "Verifying facts..."), turning wait time into perceived craftsmanship. |
 | **Meaning Drift on Complex Inputs** | Medium | Stage 3 injects the exact `drift_reason` into an automated retry; if it still fails, returns output with a soft warning badge (`meaningCheckFailed: true`) so the demo never crashes. |
 | **Genome Instability from Isolated Edits** | Low | Recurrence filter ignores one-off typo edits; requires $\ge 3$ session occurrences before shifting Style Genome parameters. |
 | **Quota Reset Maintenance Overhead** | Low | In-flight lazy calculation resets `wordsUsedThisWeek` on the first request of each calendar week (Monday 00:00 UTC) with zero cron dependencies. |

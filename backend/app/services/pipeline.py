@@ -94,7 +94,7 @@ class RewritePipelineService:
             )
 
         stage_logs: List[RewriteStageLog] = []
-        last_provider_used = "groq_llama33"
+        last_provider_used = "groq_gpt_oss_120b"
         meaning_check_failed = False
         meaning_warning: Optional[str] = None
         retried_stage3 = False
