@@ -194,9 +194,23 @@ class ResilientLLMService:
     Adapter service providing duration tracking and backward-compatible helper methods.
     """
 
-    def __init__(self) -> None:
-        self.primary_timeout = PRIMARY_TIMEOUT
-        self.fallback_timeout = FALLBACK_TIMEOUT
+    @property
+    def primary_timeout(self) -> httpx.Timeout:
+        return httpx.Timeout(
+            connect=settings.PRIMARY_CONNECT_TIMEOUT,
+            read=settings.PRIMARY_READ_TIMEOUT,
+            write=5.0,
+            pool=5.0,
+        )
+
+    @property
+    def fallback_timeout(self) -> httpx.Timeout:
+        return httpx.Timeout(
+            connect=settings.FALLBACK_CONNECT_TIMEOUT,
+            read=settings.FALLBACK_READ_TIMEOUT,
+            write=5.0,
+            pool=5.0,
+        )
 
     async def complete(
         self,

@@ -107,11 +107,11 @@ All dock icons are 20px Lucide icons rendered within a 36px circular button. Eac
   - **Right Pane (InkFlow Twin)**: Transformed output with side-by-side diff toggle (`Show what changed`).
 - **Progressive Loading State (Accurate Latency & Failover Handling)**:
   - Triggered immediately on clicking `"Transform Draft"`.
-  - To match the real backend timeout architecture (`connect 2.5s + read 9.0s` for Gemma 2, followed by Groq fallback if needed), the cycler uses this phased timeline:
+  - To match the real backend timeout architecture (`connect 3.5s + read 15.0s` for Primary Groq 120B, followed by Groq 20B fallback if needed), the cycler uses this phased timeline:
     - `0s - 3s`: *"Matching your sentence cadence and transitions..."*
-    - `3s - 7s`: *"Filtering synthetic AI buzzwords (Gemma 2)..."*
-    - `7s - 11s`: *"Verifying factual fidelity..."*
-    - `11s - 15s+` *(Failover phase)*: *"Switching to resilient backup model (Groq Llama 3.3)..."*
+    - `3s - 6s`: *"Filtering synthetic AI buzzwords (Groq 120B)..."*
+    - `6s - 9s`: *"Verifying factual fidelity..."*
+    - `9s - 13s+` *(Failover phase)*: *"Switching to resilient backup model (Groq 20B)..."*
     - `Final moment`: *"Applying light readability polish..."*
   - Elegant animated shimmer pulse across the output container.
 
@@ -124,7 +124,7 @@ All dock icons are 20px Lucide icons rendered within a 36px circular button. Eac
   - **Strict Genome Invariant**: When `meaningCheckFailed: true`, clicking "Accept" **never** feeds into the adaptive learning buffer (`recentEditsBuffer`). It protects the user's Style Genome from being poisoned by corrupted facts or hallucinations.
 
 - **Bottom Action Dock**:
-  - Provider Pill: Tag showing `DigitalOcean Gemma 2` (or `Groq Llama 3.3` on fallback).
+  - Provider Pill: Tag showing `Groq 120B` (or `Groq 20B (Backup)` on fallback).
   - Eval Score Pill: `Slop Eradication: 95%` | `Fidelity: 98%`.
   - Buttons: `Copy to Clipboard`, `Accept & Learn` (disabled from training if meaning check failed).
 
@@ -136,7 +136,7 @@ All dock icons are 20px Lucide icons rendered within a 36px circular button. Eac
 ### View 4: Pro Upgrade Modal (Razorpay Integration)
 - Modal with clean comparison table:
   - Free Tier: 2,500 words/week (resets Monday 00:00 UTC), 1 Twin profile.
-  - Pro Tier: Unlimited words, multi-context profiles, prioritized DigitalOcean GPU inference.
+  - Pro Tier: Unlimited words, multi-context profiles, dedicated high-capacity inference.
 - Trigger button: Opens the Razorpay Checkout modal directly inside the web app for UPI, card, or netbanking payments.
 
 ---

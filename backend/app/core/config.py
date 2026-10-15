@@ -81,10 +81,10 @@ class Settings(BaseSettings):
     GROQ_MODEL: str = "openai/gpt-oss-120b"
 
     # Granular timeouts
-    PRIMARY_CONNECT_TIMEOUT: float = 2.5
-    PRIMARY_READ_TIMEOUT: float = 9.0
-    FALLBACK_CONNECT_TIMEOUT: float = 2.0
-    FALLBACK_READ_TIMEOUT: float = 8.0
+    PRIMARY_CONNECT_TIMEOUT: float = 3.5
+    PRIMARY_READ_TIMEOUT: float = 15.0
+    FALLBACK_CONNECT_TIMEOUT: float = 5.0
+    FALLBACK_READ_TIMEOUT: float = 15.0
 
     # Secondary backward compatibility aliases
     GROQ_CONNECT_TIMEOUT: float = 2.0

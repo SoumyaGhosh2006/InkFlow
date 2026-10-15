@@ -77,12 +77,8 @@ async def trace_pipeline_stage(
     """
     tags = tags or {}
     
-    # Check if Sentry is actively enabled and has an active transaction hub
-    is_active = False
-    try:
-        is_active = sentry_sdk.is_initialized()
-    except Exception:
-        is_active = bool(getattr(sentry_sdk.Hub.current, "client", None))
+    # Check if Sentry is actively enabled (Sentry SDK 2.x standard)
+    is_active = bool(sentry_sdk.is_initialized())
 
     if is_active:
         with sentry_sdk.start_span(op="pipeline.stage", description=stage_name) as span:
