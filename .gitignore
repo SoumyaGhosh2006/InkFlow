@@ -51,3 +51,12 @@ Thumbs.db
 *.swo
 *~
 *.log
+
+# 5. Agent Skills & Tooling
+.agents/
+.claude/
+agent/
+skills-lock.json
+
+# 6. Internal Documentation & Architecture Notes
+docs/
