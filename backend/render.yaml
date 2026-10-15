@@ -52,4 +52,4 @@ services:
       - key: SENTRY_DSN
         sync: false
       - key: CORS_ORIGINS
-        value: "https://inkflow.app,https://www.inkflow.app"
+        value: "http://localhost:3000,http://localhost:5173,https://inkflow.tech,https://www.inkflow.tech,https://inkflow.app"

@@ -27,12 +27,12 @@ export const UpgradeModal: React.FC = () => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
-  const handleClose = () => {
+  const handleClose = React.useCallback(() => {
     setPricingModalOpen(false);
     if (activeView === 'pricing') {
       setActiveView('studio');
     }
-  };
+  }, [activeView, setPricingModalOpen, setActiveView]);
 
   useEffect(() => {
     if (!isPricingModalOpen) return;
@@ -43,7 +43,7 @@ export const UpgradeModal: React.FC = () => {
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isPricingModalOpen, activeView]);
+  }, [isPricingModalOpen, handleClose]);
 
   if (!isPricingModalOpen) return null;
 

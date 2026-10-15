@@ -1,55 +1,53 @@
-# ==============================================================================
-# InkFlow .gitignore
-# ==============================================================================
+# ==========================================
+# InkFlow Unified .gitignore
+# ==========================================
 
-# Environment variables & secrets (CRITICAL)
+# 1. Environment Variables & Secrets (CRITICAL)
 .env
-.env*.local
-.env.production
-.env.staging
-# Keep the example template tracked in Git
+.env.*
 !.env.example
+backend/.env
+frontend/.env
+frontend/.env.local
+frontend/.env.*.local
 
-# Python cache & build artifacts
+# 2. Frontend (Node / Vite / React)
+frontend/node_modules/
+node_modules/
+frontend/dist/
+frontend/dist-ssr/
+frontend/.vite/
+*.tsbuildinfo
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# 3. Backend (Python / FastAPI / Pytest)
+backend/venv/
+backend/.venv/
+venv/
+.venv/
+ENV/
+env/
 __pycache__/
 *.py[cod]
 *$py.class
 *.so
-.Python
-build/
-dist/
-*.egg-info/
-.eggs/
-
-# Virtual environments
-.venv/
-venv/
-env/
-ENV/
-
-# Testing & Pytest cache
 .pytest_cache/
 .coverage
 htmlcov/
+.mypy_cache/
+.ruff_cache/
 
-# Node.js & Frontend dependencies (Next.js / React)
-node_modules/
-.next/
-out/
-dist/
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-
-# Database / Local storage
-*.sqlite3
-*.db
-mongo-data/
-
-# OS & Editor generated files
+# 4. OS & IDE Metadata
 .DS_Store
 Thumbs.db
 .vscode/
+!.vscode/settings.json
+!.vscode/extensions.json
 .idea/
 *.swp
 *.swo
+*~
+*.log

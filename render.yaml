@@ -1,0 +1,75 @@
+# ==============================================================================
+# InkFlow Full-Stack Render Blueprint (render.yaml)
+# Deploys FastAPI backend Web Service + Vite React Static Site frontend
+# ==============================================================================
+
+services:
+  # ----------------------------------------------------------------------------
+  # 1. FastAPI Backend Web Service
+  # ----------------------------------------------------------------------------
+  - type: web
+    name: inkflow-backend
+    runtime: python
+    region: oregon
+    plan: standard
+    branch: main
+    rootDir: backend
+    buildCommand: "pip install -r requirements.txt"
+    startCommand: "uvicorn app.main:app --host 0.0.0.0 --port $PORT"
+    envVars:
+      - key: ENVIRONMENT
+        value: production
+      - key: DEBUG
+        value: "false"
+      - key: API_V1_STR
+        value: "/api/v1"
+      - key: MONGODB_URI
+        sync: false
+      - key: MONGODB_DB_NAME
+        value: inkflow
+      - key: SECRET_KEY
+        generateValue: true
+      - key: ACCESS_TOKEN_EXPIRE_MINUTES
+        value: "10080"
+      - key: GROQ_BASE_URL
+        value: "https://api.groq.com/openai/v1"
+      - key: GROQ_PRIMARY_MODEL
+        value: "openai/gpt-oss-120b"
+      - key: GROQ_FALLBACK_MODEL
+        value: "openai/gpt-oss-20b"
+      - key: GROQ_API_KEY
+        sync: false
+      - key: PRIMARY_CONNECT_TIMEOUT
+        value: "2.5"
+      - key: PRIMARY_READ_TIMEOUT
+        value: "9.0"
+      - key: FALLBACK_CONNECT_TIMEOUT
+        value: "2.0"
+      - key: FALLBACK_READ_TIMEOUT
+        value: "8.0"
+      - key: FREE_TIER_WEEKLY_WORD_LIMIT
+        value: "2500"
+      - key: SENTRY_DSN
+        sync: false
+      - key: CORS_ORIGINS
+        value: "http://localhost:3000,http://localhost:5173,https://inkflow.tech,https://www.inkflow.tech"
+
+  # ----------------------------------------------------------------------------
+  # 2. Vite React Frontend Static Site
+  # ----------------------------------------------------------------------------
+  - type: web
+    name: inkflow-frontend
+    runtime: static
+    region: oregon
+    plan: free
+    branch: main
+    rootDir: frontend
+    buildCommand: "npm install && npm run build"
+    staticPublishPath: "./dist"
+    routes:
+      - type: rewrite
+        source: "/*"
+        destination: "/index.html"
+    envVars:
+      - key: VITE_API_URL
+        value: "https://inkflow-backend.onrender.com/api/v1"

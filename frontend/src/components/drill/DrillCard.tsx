@@ -10,7 +10,7 @@
  * - Unlocks Style Genome via GenomeReveal celebratory modal.
  */
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowRight, Sparkles, Loader2, RefreshCw } from 'lucide-react';
 import { DrillCountdown } from './DrillCountdown';
@@ -51,33 +51,18 @@ export const DrillCard: React.FC = () => {
     };
   }, []);
 
-  // 60-second countdown tick
+  const currentTextRef = useRef(currentText);
   useEffect(() => {
-    if (!isTimerRunning || isLoading) return;
+    currentTextRef.current = currentText;
+  }, [currentText]);
 
-    timerRef.current = setInterval(() => {
-      setTimeLeft((prev) => {
-        if (prev <= 1) {
-          // Timer expired: auto-advance
-          handleNextPrompt();
-          return 60;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-
-    return () => {
-      if (timerRef.current) clearInterval(timerRef.current);
-    };
-  }, [isTimerRunning, currentIndex, prompts, currentText]);
-
-  const handleNextPrompt = async () => {
+  const handleNextPrompt = useCallback(async () => {
     if (prompts.length === 0) return;
 
     const currentPrompt = prompts[currentIndex];
     const updatedAnswers = {
       ...answers,
-      [currentPrompt.id]: currentText.trim() || 'No answer provided in 60s.',
+      [currentPrompt.id]: currentTextRef.current.trim() || 'No answer provided in 60s.',
     };
     setAnswers(updatedAnswers);
     setCurrentText('');
@@ -106,7 +91,32 @@ export const DrillCard: React.FC = () => {
         setIsSubmitting(false);
       }
     }
-  };
+  }, [answers, currentIndex, prompts]);
+
+  const handleNextPromptRef = useRef(handleNextPrompt);
+  useEffect(() => {
+    handleNextPromptRef.current = handleNextPrompt;
+  }, [handleNextPrompt]);
+
+  // 60-second countdown tick
+  useEffect(() => {
+    if (!isTimerRunning || isLoading) return;
+
+    timerRef.current = setInterval(() => {
+      setTimeLeft((prev) => {
+        if (prev <= 1) {
+          // Timer expired: auto-advance
+          handleNextPromptRef.current();
+          return 60;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => {
+      if (timerRef.current) clearInterval(timerRef.current);
+    };
+  }, [isTimerRunning, isLoading]);
 
   const handleReset = () => {
     setCurrentIndex(0);
