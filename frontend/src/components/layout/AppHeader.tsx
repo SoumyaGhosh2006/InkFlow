@@ -8,12 +8,12 @@
  */
 
 import React from 'react';
-import { Crown, Sparkles, CheckCircle2 } from 'lucide-react';
+import { Crown, Sparkles, CheckCircle2, LogIn, LogOut } from 'lucide-react';
 import { useAuthStore } from '../../store/useAuthStore';
 import { useStudioStore } from '../../store/useStudioStore';
 
 export const AppHeader: React.FC = () => {
-  const { user } = useAuthStore();
+  const { user, loginWithGoogle, logout, isLoading } = useAuthStore();
   const { activeView, setPricingModalOpen } = useStudioStore();
 
   const getTitle = () => {
@@ -32,6 +32,7 @@ export const AppHeader: React.FC = () => {
   };
 
   const isPro = user?.tier === 'pro';
+  const isAnonymous = !user || user.id === 'usr_local_dev';
 
   return (
     <header className="h-16 flex-shrink-0 bg-surface border-b border-surface-border px-8 flex items-center justify-between select-none z-10">
@@ -74,16 +75,40 @@ export const AppHeader: React.FC = () => {
           </span>
         )}
 
-        {/* User Avatar */}
-        <div className="flex items-center space-x-2 pl-2 border-l border-surface-border">
-          <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-stone-800 to-stone-600 text-stone-100 flex items-center justify-center text-xs font-bold font-serif">
-            {user?.displayName ? user.displayName.slice(0, 1).toUpperCase() : 'A'}
+        {/* User Auth: Google Sign-in or Avatar */}
+        {isAnonymous ? (
+          <button
+            onClick={() => loginWithGoogle()}
+            disabled={isLoading}
+            className="flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-surface hover:bg-stone-100 text-ink-primary border border-surface-border text-xs font-semibold shadow-xs transition-all"
+          >
+            <LogIn className="w-3.5 h-3.5 text-stone-600" />
+            <span>Sign In</span>
+          </button>
+        ) : (
+          <div className="flex items-center space-x-2 pl-2 border-l border-surface-border">
+            <div
+              className="w-8 h-8 rounded-full bg-gradient-to-tr from-stone-800 to-stone-600 text-stone-100 flex items-center justify-center text-xs font-bold font-serif"
+              title={user.email}
+            >
+              {user.displayName ? user.displayName.slice(0, 1).toUpperCase() : 'A'}
+            </div>
+            <div className="hidden lg:flex flex-col">
+              <span className="text-xs font-medium text-ink-primary leading-tight">
+                {user.displayName || 'Author'}
+              </span>
+              <button
+                onClick={() => logout()}
+                className="text-[10px] text-stone-400 hover:text-red-600 text-left transition-colors flex items-center"
+              >
+                <LogOut className="w-2.5 h-2.5 inline mr-1" />
+                <span>Sign out</span>
+              </button>
+            </div>
           </div>
-          <span className="hidden lg:inline text-xs font-medium text-ink-primary">
-            {user?.displayName || 'Author'}
-          </span>
-        </div>
+        )}
       </div>
     </header>
   );
 };
+
