@@ -1,0 +1,74 @@
+@import url('https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400..600;1,6..72,400..600&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: light;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  background-color: #FAF9F6;
+  color: #1C1917;
+  font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  min-height: 100vh;
+}
+
+/* Custom scrollbar for editors */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #E7E5E0;
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #D7D3CD;
+}
+
+/* AI Slop underline animation & highlight */
+.slop-highlight {
+  background-color: rgba(245, 158, 11, 0.15);
+  border-bottom: 2px wavy #F59E0B;
+  border-radius: 2px;
+  padding: 0 2px;
+  cursor: help;
+  transition: background-color 0.15s ease;
+}
+
+.slop-highlight:hover {
+  background-color: rgba(245, 158, 11, 0.3);
+}
+
+/* Shimmer animation for progressive cycler */
+@keyframes shimmerPulse {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.shimmer-active {
+  background: linear-gradient(
+    90deg,
+    rgba(244, 242, 237, 0.4) 0%,
+    rgba(254, 243, 199, 0.6) 50%,
+    rgba(244, 242, 237, 0.4) 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmerPulse 2s infinite ease-in-out;
+}
