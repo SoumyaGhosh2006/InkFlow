@@ -114,48 +114,69 @@ async def get_current_user(
     if not uid and not email:
         raise credentials_exception
 
-    users_col = get_users_collection()
-    user = None
-
-    # Search by ObjectId, firebaseUid, or email
     try:
-        if uid and ObjectId.is_valid(uid):
-            user = await users_col.find_one({"_id": ObjectId(uid)})
-    except Exception:
-        pass
+        users_col = get_users_collection()
+        user = None
 
-    if not user and uid:
-        user = await users_col.find_one({"$or": [{"firebaseUid": uid}, {"user_id": uid}]})
+        # Search by ObjectId, firebaseUid, or email
+        try:
+            if uid and ObjectId.is_valid(uid):
+                user = await users_col.find_one({"_id": ObjectId(uid)})
+        except Exception:
+            pass
 
-    if not user and email:
-        user = await users_col.find_one({"email": email.lower()})
+        if not user and uid:
+            user = await users_col.find_one({"$or": [{"firebaseUid": uid}, {"user_id": uid}]})
 
-    # If user not found, auto-provision profile (Auth Sync fallback)
-    if user is None:
+        if not user and email:
+            user = await users_col.find_one({"email": email.lower()})
+
+        # If user not found, auto-provision profile (Auth Sync fallback)
+        if user is None:
+            now_utc = datetime.now(timezone.utc)
+            start_of_week = (now_utc - timedelta(days=now_utc.weekday())).replace(
+                hour=0, minute=0, second=0, microsecond=0
+            )
+            new_user = {
+                "firebaseUid": uid or f"user_{now_utc.timestamp()}",
+                "email": (email or f"{uid}@inkflow.app").lower(),
+                "displayName": claims.get("name") or claims.get("displayName") or "InkFlow Author",
+                "tier": "free",
+                "razorpaySubscriptionId": None,
+                "wordsUsedThisWeek": 0,
+                "words_used_this_week": 0,
+                "weeklyWordLimit": settings.FREE_TIER_WEEKLY_WORD_LIMIT,
+                "lastWeekReset": start_of_week,
+                "quota_reset_date": start_of_week + timedelta(days=7),
+                "streakDays": 1,
+                "is_active": True,
+                "createdAt": now_utc,
+                "created_at": now_utc,
+                "updatedAt": now_utc,
+                "updated_at": now_utc,
+            }
+            res = await users_col.insert_one(new_user)
+            new_user["_id"] = res.inserted_id
+            user = new_user
+    except Exception as db_exc:
+        logger.warning("MongoDB unavailable during user resolution (%s); using claims fallback: %s", uid, db_exc)
         now_utc = datetime.now(timezone.utc)
         start_of_week = (now_utc - timedelta(days=now_utc.weekday())).replace(
             hour=0, minute=0, second=0, microsecond=0
         )
-        new_user = {
-            "firebaseUid": uid or f"user_{now_utc.timestamp()}",
-            "email": (email or f"{uid}@inkflow.app").lower(),
-            "displayName": claims.get("name") or claims.get("displayName") or "InkFlow Author",
+        user = {
+            "_id": uid or "usr_session",
+            "firebaseUid": uid,
+            "email": (email or "author@inkflow.app").lower(),
+            "displayName": claims.get("name") or claims.get("displayName") or (email.split("@")[0] if email else "InkFlow Author"),
             "tier": "free",
-            "razorpaySubscriptionId": None,
             "wordsUsedThisWeek": 0,
             "words_used_this_week": 0,
             "weeklyWordLimit": settings.FREE_TIER_WEEKLY_WORD_LIMIT,
             "lastWeekReset": start_of_week,
-            "quota_reset_date": start_of_week + timedelta(days=7),
             "streakDays": 1,
             "is_active": True,
             "createdAt": now_utc,
-            "created_at": now_utc,
-            "updatedAt": now_utc,
-            "updated_at": now_utc,
         }
-        res = await users_col.insert_one(new_user)
-        new_user["_id"] = res.inserted_id
-        user = new_user
 
     return user
