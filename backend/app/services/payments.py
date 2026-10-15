@@ -34,8 +34,8 @@ class PaymentService:
     def create_order(
         self,
         user_id: str,
-        amount_cents: int = 1500,
-        currency: str = "USD",
+        amount_cents: int = 49900,
+        currency: str = "INR",
         plan: str = "pro_monthly",
     ) -> Dict[str, Any]:
         """

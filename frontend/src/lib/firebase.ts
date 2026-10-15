@@ -26,6 +26,9 @@ const firebaseConfig = {
 let app: FirebaseApp | null = null;
 let auth: Auth | null = null;
 const googleProvider = new GoogleAuthProvider();
+googleProvider.setCustomParameters({
+  prompt: 'select_account',
+});
 
 if (firebaseConfig.apiKey && firebaseConfig.projectId) {
   try {
@@ -43,14 +46,28 @@ export { auth, googleProvider };
  */
 export async function signInWithGoogle(): Promise<{ user: User; token: string } | null> {
   if (!auth) {
-    console.warn('Firebase Auth is not initialized. Check frontend/.env');
+    alert('Firebase is not initialized. Please ensure your frontend/.env has valid Firebase keys.');
     return null;
   }
 
-  const result = await signInWithPopup(auth, googleProvider);
-  const token = await result.user.getIdToken();
-  localStorage.setItem('inkflow_token', token);
-  return { user: result.user, token };
+  try {
+    const result = await signInWithPopup(auth, googleProvider);
+    const token = await result.user.getIdToken();
+    localStorage.setItem('inkflow_token', token);
+    return { user: result.user, token };
+  } catch (err: any) {
+    console.error('Google Sign-In error:', err);
+    if (err.code === 'auth/popup-closed-by-user' || err.code === 'auth/cancelled-popup-request') {
+      alert("Google Sign-In window closed.\n\nNOTE FOR BRAVE BROWSER: If you are using Brave, click the orange lion icon in the URL bar and toggle 'Shields DOWN' for localhost:3000, then try again.");
+    } else if (err.code === 'auth/unauthorized-domain') {
+      alert(`Domain unauthorized (${window.location.hostname}). Please add this domain to Firebase Console -> Authentication -> Settings -> Authorized Domains.`);
+    } else if (err.code === 'auth/configuration-not-found') {
+      alert('Google Sign-In is not enabled in Firebase Console. Go to Authentication -> Sign-in method -> Enable Google.');
+    } else {
+      alert(`Google Sign-In error (${err.code}): ${err.message}`);
+    }
+    throw err;
+  }
 }
 
 /**

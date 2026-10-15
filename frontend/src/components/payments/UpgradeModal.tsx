@@ -23,7 +23,7 @@ declare global {
 
 export const UpgradeModal: React.FC = () => {
   const { isPricingModalOpen, setPricingModalOpen, activeView, setActiveView } = useStudioStore();
-  const { user, setUserTier } = useAuthStore();
+  const { user, setUserTier, loginWithGoogle } = useAuthStore();
   const [isProcessing, setIsProcessing] = useState(false);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
@@ -48,10 +48,26 @@ export const UpgradeModal: React.FC = () => {
   if (!isPricingModalOpen) return null;
 
   const isAlreadyPro = user?.tier === 'pro';
+  const isAnonymous = !user || user.id === 'usr_local_dev';
 
   const handleLaunchCheckout = async () => {
     setIsProcessing(true);
     setSuccessMessage(null);
+
+    // If user is not logged in, trigger Google Sign-In first
+    if (isAnonymous) {
+      try {
+        await loginWithGoogle();
+        const activeUser = useAuthStore.getState().user;
+        if (!activeUser || activeUser.id === 'usr_local_dev') {
+          setIsProcessing(false);
+          return;
+        }
+      } catch (err) {
+        setIsProcessing(false);
+        return;
+      }
+    }
 
     try {
       // 1. Create order on backend
@@ -59,10 +75,11 @@ export const UpgradeModal: React.FC = () => {
 
       // 2. If Razorpay JS SDK is loaded in window
       if (typeof window.Razorpay === 'function') {
+        const activeUser = useAuthStore.getState().user;
         const options = {
           key: order.key_id || 'rzp_test_inkflow',
           amount: order.amount,
-          currency: order.currency || 'USD',
+          currency: order.currency || 'INR',
           name: 'InkFlow Pro',
           description: 'Unlimited Adaptive Rewrites & Multi-Context Genomes',
           order_id: order.order_id,
@@ -79,22 +96,27 @@ export const UpgradeModal: React.FC = () => {
               confetti({ particleCount: 90, spread: 70, origin: { y: 0.6 } });
             } catch (err: any) {
               console.error('Payment verification failed:', err);
+              alert('Payment verification failed on server.');
             } finally {
               setIsProcessing(false);
             }
           },
           prefill: {
-            name: user?.displayName || 'InkFlow Author',
-            email: user?.email || 'author@inkflow.tech',
+            name: activeUser?.displayName || 'InkFlow Author',
+            email: activeUser?.email || 'author@inkflow.tech',
           },
           theme: {
             color: '#F59E0B',
+          },
+          modal: {
+            ondismiss: () => {
+              setIsProcessing(false);
+            },
           },
         };
 
         const rzpInstance = new window.Razorpay(options);
         rzpInstance.open();
-        setIsProcessing(false);
       } else {
         // Fallback for sandboxed preview if external checkout.js is blocked
         console.info('Simulating sandbox verification...');
@@ -110,6 +132,7 @@ export const UpgradeModal: React.FC = () => {
       }
     } catch (err: any) {
       console.error('Checkout error:', err);
+      alert(`Checkout failed: ${err.message || 'Check backend connection'}`);
       setIsProcessing(false);
     }
   };
@@ -205,7 +228,7 @@ export const UpgradeModal: React.FC = () => {
                   <Sparkles className="w-4 h-4 text-accent-primary" />
                   <span>InkFlow Pro</span>
                 </h3>
-                <span className="text-sm font-mono font-bold text-amber-950">$15 / mo</span>
+                <span className="text-sm font-mono font-bold text-amber-950">₹499 / mo</span>
               </div>
               <p className="text-xs text-amber-900/80">
                 For researchers, academics, and professionals who write daily.
@@ -235,22 +258,27 @@ export const UpgradeModal: React.FC = () => {
               <button
                 onClick={handleLaunchCheckout}
                 disabled={isProcessing || isAlreadyPro}
-                className="w-full py-2.5 px-3 rounded-xl bg-accent-primary hover:bg-accent-hover disabled:bg-stone-300 text-stone-900 font-semibold text-xs flex items-center justify-center space-x-1.5 shadow-sm transition-all"
+                className="w-full py-2.5 px-3 rounded-xl bg-accent-primary hover:bg-accent-hover disabled:bg-stone-300 text-stone-900 font-semibold text-xs flex items-center justify-center space-x-1.5 shadow-sm transition-all cursor-pointer"
               >
                 {isProcessing ? (
                   <>
                     <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                    <span>Opening Razorpay Checkout...</span>
+                    <span>{isAnonymous ? 'Signing in with Google...' : 'Opening Razorpay Checkout...'}</span>
                   </>
                 ) : isAlreadyPro ? (
                   <>
                     <Check className="w-3.5 h-3.5" />
                     <span>Already Subscribed</span>
                   </>
+                ) : isAnonymous ? (
+                  <>
+                    <CreditCard className="w-3.5 h-3.5" />
+                    <span>Sign In with Google to Upgrade (₹499)</span>
+                  </>
                 ) : (
                   <>
                     <CreditCard className="w-3.5 h-3.5" />
-                    <span>Upgrade with Razorpay ($15)</span>
+                    <span>Upgrade with Razorpay (₹499)</span>
                   </>
                 )}
               </button>

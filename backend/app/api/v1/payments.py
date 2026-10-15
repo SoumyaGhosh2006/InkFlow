@@ -69,8 +69,8 @@ async def create_order(
 
     return payment_service.create_order(
         user_id=user_id,
-        amount_cents=1500,
-        currency="USD",
+        amount_cents=49900,
+        currency="INR",
         plan=payload.plan,
     )
 

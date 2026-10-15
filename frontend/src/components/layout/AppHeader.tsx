@@ -34,6 +34,22 @@ export const AppHeader: React.FC = () => {
   const isPro = user?.tier === 'pro';
   const isAnonymous = !user || user.id === 'usr_local_dev';
 
+  const handleGetPro = async () => {
+    if (isAnonymous) {
+      try {
+        await loginWithGoogle();
+        const activeUser = useAuthStore.getState().user;
+        if (activeUser && activeUser.id !== 'usr_local_dev') {
+          setPricingModalOpen(true);
+        }
+      } catch {
+        // Handled in auth store
+      }
+    } else {
+      setPricingModalOpen(true);
+    }
+  };
+
   return (
     <header className="h-16 flex-shrink-0 bg-surface border-b border-surface-border px-8 flex items-center justify-between select-none z-10">
       {/* Brand & Breadcrumb */}
@@ -62,8 +78,8 @@ export const AppHeader: React.FC = () => {
 
         {!isPro ? (
           <button
-            onClick={() => setPricingModalOpen(true)}
-            className="flex items-center space-x-1.5 px-3.5 py-1.5 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300/80 text-xs font-semibold shadow-xs transition-all"
+            onClick={handleGetPro}
+            className="flex items-center space-x-1.5 px-3.5 py-1.5 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300/80 text-xs font-semibold shadow-xs transition-all cursor-pointer"
           >
             <Crown className="w-3.5 h-3.5 text-accent-primary" />
             <span>Get Pro</span>

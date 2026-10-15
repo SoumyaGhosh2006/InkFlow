@@ -14,7 +14,7 @@ import { useAuthStore } from '../../store/useAuthStore';
 import { useStudioStore } from '../../store/useStudioStore';
 
 export const StatsSidebar: React.FC = () => {
-  const { user, fetchUser } = useAuthStore();
+  const { user, fetchUser, loginWithGoogle } = useAuthStore();
   const { setPricingModalOpen, setActiveView } = useStudioStore();
 
   useEffect(() => {
@@ -23,6 +23,23 @@ export const StatsSidebar: React.FC = () => {
 
   const tier = user?.tier || 'free';
   const isPro = tier === 'pro';
+
+  const handleUpgradeToPro = async () => {
+    const isAnonymous = !user || user.id === 'usr_local_dev';
+    if (isAnonymous) {
+      try {
+        await loginWithGoogle();
+        const activeUser = useAuthStore.getState().user;
+        if (activeUser && activeUser.id !== 'usr_local_dev') {
+          setPricingModalOpen(true);
+        }
+      } catch {
+        // error handled by auth store
+      }
+    } else {
+      setPricingModalOpen(true);
+    }
+  };
   const limit = user?.weeklyWordLimit || 2500;
   const wordsUsed = user?.wordsUsedThisWeek || 420;
   const wordsLeft = Math.max(0, limit - wordsUsed);
@@ -84,8 +101,8 @@ export const StatsSidebar: React.FC = () => {
 
           {!isPro && (
             <button
-              onClick={() => setPricingModalOpen(true)}
-              className="w-full mt-2 py-2.5 px-3 rounded-xl bg-gradient-to-r from-accent-primary to-amber-500 hover:from-amber-600 hover:to-amber-500 text-white font-semibold text-xs flex items-center justify-center space-x-1.5 shadow-sm transition-all"
+              onClick={handleUpgradeToPro}
+              className="w-full mt-2 py-2.5 px-3 rounded-xl bg-gradient-to-r from-accent-primary to-amber-500 hover:from-amber-600 hover:to-amber-500 text-white font-semibold text-xs flex items-center justify-center space-x-1.5 shadow-sm transition-all cursor-pointer"
             >
               <Crown className="w-3.5 h-3.5" />
               <span>Upgrade to Pro for Unlimited</span>
