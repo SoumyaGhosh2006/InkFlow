@@ -10,6 +10,7 @@ export interface UserProfile {
   firebaseUid?: string;
   email: string;
   displayName?: string;
+  photoUrl?: string;
   tier: UserTier;
   wordsUsedThisWeek: number;
   weeklyWordLimit: number;

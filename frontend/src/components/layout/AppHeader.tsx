@@ -14,7 +14,7 @@ import { useStudioStore } from '../../store/useStudioStore';
 
 export const AppHeader: React.FC = () => {
   const { user, loginWithGoogle, logout, isLoading } = useAuthStore();
-  const { activeView, setPricingModalOpen } = useStudioStore();
+  const { activeView, setActiveView, setPricingModalOpen } = useStudioStore();
 
   const getTitle = () => {
     switch (activeView) {
@@ -32,14 +32,16 @@ export const AppHeader: React.FC = () => {
   };
 
   const isPro = user?.tier === 'pro';
-  const isAnonymous = !user || user.id === 'usr_local_dev';
+  const isAnonymous =
+    !user ||
+    (user.id === 'usr_local_dev' && (!user.email || user.email === 'author@inkflow.tech'));
 
   const handleGetPro = async () => {
     if (isAnonymous) {
       try {
         await loginWithGoogle();
         const activeUser = useAuthStore.getState().user;
-        if (activeUser && activeUser.id !== 'usr_local_dev') {
+        if (activeUser && (activeUser.id !== 'usr_local_dev' || activeUser.email !== 'author@inkflow.tech')) {
           setPricingModalOpen(true);
         }
       } catch {
@@ -103,24 +105,40 @@ export const AppHeader: React.FC = () => {
           </button>
         ) : (
           <div className="flex items-center space-x-2 pl-2 border-l border-surface-border">
-            <div
-              className="w-8 h-8 rounded-full bg-gradient-to-tr from-stone-800 to-stone-600 text-stone-100 flex items-center justify-center text-xs font-bold font-serif"
-              title={user.email}
+            <button
+              onClick={() => setActiveView('evolution')}
+              title={`View ${user.displayName || 'Author'}'s Personal Writing Dashboard (⌘3)`}
+              className="flex items-center space-x-2 p-1 rounded-xl hover:bg-surface-subtle transition-colors group cursor-pointer text-left"
             >
-              {user.displayName ? user.displayName.slice(0, 1).toUpperCase() : 'A'}
-            </div>
-            <div className="hidden lg:flex flex-col">
-              <span className="text-xs font-medium text-ink-primary leading-tight">
-                {user.displayName || 'Author'}
-              </span>
-              <button
-                onClick={() => logout()}
-                className="text-[10px] text-stone-400 hover:text-red-600 text-left transition-colors flex items-center"
-              >
-                <LogOut className="w-2.5 h-2.5 inline mr-1" />
-                <span>Sign out</span>
-              </button>
-            </div>
+              {user.photoUrl ? (
+                <img
+                  src={user.photoUrl}
+                  alt={user.displayName || 'Author'}
+                  className="w-8 h-8 rounded-full border border-surface-border object-cover"
+                />
+              ) : (
+                <div
+                  className="w-8 h-8 rounded-full bg-gradient-to-tr from-amber-600 to-amber-500 text-stone-100 flex items-center justify-center text-xs font-bold font-serif shadow-xs"
+                >
+                  {user.displayName ? user.displayName.slice(0, 1).toUpperCase() : 'A'}
+                </div>
+              )}
+              <div className="hidden lg:flex flex-col">
+                <span className="text-xs font-semibold text-ink-primary group-hover:text-accent-primary transition-colors truncate max-w-[120px]">
+                  {user.displayName || 'Author'}
+                </span>
+                <span className="text-[10px] text-ink-tertiary uppercase tracking-wider">
+                  {user.tier}
+                </span>
+              </div>
+            </button>
+            <button
+              onClick={() => logout()}
+              title="Sign Out"
+              className="p-1.5 hover:bg-stone-100 rounded-lg text-stone-400 hover:text-stone-700 transition-colors cursor-pointer"
+            >
+              <LogOut className="w-3.5 h-3.5" />
+            </button>
           </div>
         )}
       </div>

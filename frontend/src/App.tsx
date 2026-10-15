@@ -18,13 +18,30 @@ import { WritingEvolutionView } from './components/evolution/WritingEvolutionVie
 import { UpgradeModal } from './components/payments/UpgradeModal';
 import { useStudioStore } from './store/useStudioStore';
 import { useAuthStore } from './store/useAuthStore';
+import { onAuthChange } from './lib/firebase';
 
 export const App: React.FC = () => {
   const { activeView, setActiveView, setPricingModalOpen } = useStudioStore();
   const { fetchUser } = useAuthStore();
 
   useEffect(() => {
+    // Synchronize auth state and bearer token with Firebase auth events
+    const unsubscribe = onAuthChange(async (fbUser) => {
+      if (fbUser) {
+        try {
+          const token = await fbUser.getIdToken();
+          localStorage.setItem('inkflow_token', token);
+          await fetchUser();
+        } catch (e) {
+          console.warn('Failed to refresh Firebase token:', e);
+        }
+      }
+    });
+
     fetchUser();
+    return () => {
+      if (typeof unsubscribe === 'function') unsubscribe();
+    };
   }, [fetchUser]);
 
   // If user navigates to pricing view directly, pop the upgrade modal and return view to studio

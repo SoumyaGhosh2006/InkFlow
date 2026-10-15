@@ -4,6 +4,7 @@
  */
 
 import axios, { AxiosError } from 'axios';
+import { auth } from './firebase';
 import type {
   UserProfile,
   DrillPrompt,
@@ -94,21 +95,26 @@ const FALLBACK_GENOME: StyleGenomeResponse = {
 // Authentication Endpoints
 // -----------------------------------------------------------------------------
 export const authApi = {
-  async sync(): Promise<UserProfile> {
+  async sync(fbUser?: { uid?: string; email?: string | null; displayName?: string | null; photoUrl?: string }): Promise<UserProfile> {
     try {
       const response = await apiClient.post<UserProfile>('/auth/sync');
       return response.data;
     } catch (err) {
       console.warn('Backend /auth/sync unavailable, using local session state:', err);
+      const current = auth?.currentUser;
       return {
-        id: 'usr_local_dev',
-        email: 'author@inkflow.tech',
-        displayName: 'InkFlow Author',
+        id: fbUser?.uid || current?.uid || 'usr_local_dev',
+        email: fbUser?.email || current?.email || 'author@inkflow.tech',
+        displayName:
+          fbUser?.displayName ||
+          current?.displayName ||
+          (current?.email ? current.email.split('@')[0] : 'InkFlow Author'),
+        photoUrl: fbUser?.photoUrl || current?.photoURL || undefined,
         tier: 'free',
-        wordsUsedThisWeek: 420,
+        wordsUsedThisWeek: 0,
         weeklyWordLimit: 2500,
         lastWeekReset: new Date().toISOString(),
-        streakDays: 4,
+        streakDays: 1,
         is_active: true,
       };
     }

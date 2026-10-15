@@ -38,8 +38,28 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     set({ isLoading: true, error: null });
     try {
       const res = await signInWithGoogle();
-      if (res) {
-        const user = await authApi.sync();
+      if (res && res.user) {
+        // Immediate optimistic update with real Google credentials
+        set({
+          user: {
+            id: res.user.uid,
+            email: res.user.email || '',
+            displayName: res.user.displayName || (res.user.email ? res.user.email.split('@')[0] : 'Author'),
+            photoUrl: res.user.photoURL || undefined,
+            tier: 'free',
+            wordsUsedThisWeek: 0,
+            weeklyWordLimit: 2500,
+            lastWeekReset: new Date().toISOString(),
+            streakDays: 1,
+            is_active: true,
+          },
+        });
+        const user = await authApi.sync({
+          uid: res.user.uid,
+          email: res.user.email,
+          displayName: res.user.displayName,
+          photoUrl: res.user.photoURL || undefined,
+        });
         set({ user, isLoading: false });
       } else {
         set({ isLoading: false });

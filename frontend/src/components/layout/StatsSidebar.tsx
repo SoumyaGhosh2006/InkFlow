@@ -25,12 +25,17 @@ export const StatsSidebar: React.FC = () => {
   const isPro = tier === 'pro';
 
   const handleUpgradeToPro = async () => {
-    const isAnonymous = !user || user.id === 'usr_local_dev';
+    const isAnonymous =
+      !user ||
+      (user.id === 'usr_local_dev' && (!user.email || user.email === 'author@inkflow.tech'));
     if (isAnonymous) {
       try {
         await loginWithGoogle();
         const activeUser = useAuthStore.getState().user;
-        if (activeUser && activeUser.id !== 'usr_local_dev') {
+        if (
+          activeUser &&
+          (activeUser.id !== 'usr_local_dev' || activeUser.email !== 'author@inkflow.tech')
+        ) {
           setPricingModalOpen(true);
         }
       } catch {

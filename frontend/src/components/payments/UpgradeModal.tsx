@@ -48,7 +48,9 @@ export const UpgradeModal: React.FC = () => {
   if (!isPricingModalOpen) return null;
 
   const isAlreadyPro = user?.tier === 'pro';
-  const isAnonymous = !user || user.id === 'usr_local_dev';
+  const isAnonymous =
+    !user ||
+    (user.id === 'usr_local_dev' && (!user.email || user.email === 'author@inkflow.tech'));
 
   const handleLaunchCheckout = async () => {
     setIsProcessing(true);
@@ -59,7 +61,11 @@ export const UpgradeModal: React.FC = () => {
       try {
         await loginWithGoogle();
         const activeUser = useAuthStore.getState().user;
-        if (!activeUser || activeUser.id === 'usr_local_dev') {
+        if (
+          !activeUser ||
+          (activeUser.id === 'usr_local_dev' &&
+            (!activeUser.email || activeUser.email === 'author@inkflow.tech'))
+        ) {
           setIsProcessing(false);
           return;
         }
