@@ -24,7 +24,7 @@ Endpoints:
 
 import logging
 from datetime import datetime, timezone
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, List
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, Field
 from bson import ObjectId
@@ -39,6 +39,7 @@ from app.models.rewrite import (
 from app.services.quota import check_and_apply_quota, count_words
 from app.services.pipeline import rewrite_pipeline_service
 from app.services.adaptive import adaptive_learning_service
+from app.services.providers import resilient_llm_service
 
 logger = logging.getLogger("inkflow.api.rewrite")
 router = APIRouter()
@@ -257,3 +258,93 @@ async def submit_rewrite_feedback(
         "patterns_promoted": promoted,
         "message": f"Recorded feedback. {len(promoted)} pattern(s) reached promotion threshold.",
     }
+
+
+class ChatMessage(BaseModel):
+    role: str = Field(default="user", description="'user', 'assistant', or 'system'")
+    content: str = Field(..., description="Message content")
+
+
+class ChatComposeRequest(BaseModel):
+    prompt: Optional[str] = Field(None, description="Direct draft prompt or task")
+    messages: Optional[List[ChatMessage]] = Field(default=None, description="Full multi-turn chat history")
+    context: Optional[str] = Field(default="work_formal", description="Context profile: work_formal, workplace_chat, academic, etc.")
+    tone: Optional[str] = Field(default=None, description="Tone guidance, e.g. 'direct', 'crisp', 'warm'")
+
+
+class ChatComposeResponse(BaseModel):
+    reply: str
+    words_consumed: int
+    quota_remaining: int
+    provider: str
+
+
+@router.post(
+    "/chat",
+    response_model=ChatComposeResponse,
+    summary="Direct multi-turn AI Writer chatbox for drafting emails, notes, letters, and text directly",
+)
+async def chat_compose(
+    payload: ChatComposeRequest,
+    current_user: Dict[str, Any] = Depends(get_current_user),
+) -> ChatComposeResponse:
+    """
+    POST /api/v1/rewrite/chat:
+    Direct AI generation chatbox. Crafts complete emails, lecture notes, messages,
+    and documents directly in natural cadence using the configured Groq LLM.
+    """
+    user_id = str(current_user.get("_id", current_user.get("userId", "")))
+
+    prompt_text = payload.prompt or ""
+    if not prompt_text and payload.messages:
+        prompt_text = payload.messages[-1].content
+
+    words_in_prompt = max(1, count_words(prompt_text))
+    updated_user, words_consumed, remaining_quota = await check_and_apply_quota(
+        user_id, prompt_text or "chat compose prompt"
+    )
+
+    # Style Genome context integration
+    exemplars = []
+    try:
+        genomes_col = get_genomes_collection()
+        user_genome = await genomes_col.find_one({"$or": [{"userId": user_id}, {"user_id": user_id}]})
+        if user_genome:
+            exemplars = user_genome.get("exemplars", [])
+    except Exception:
+        pass
+
+    system_instruction = (
+        "You are InkFlow AI Writer, an authentic, high-precision composition assistant.\n"
+        "Draft complete, ready-to-use text (emails, letters, study notes, messages, articles, announcements) directly in natural, human cadence.\n\n"
+        "STRICT COMPOSITION RULES:\n"
+        "1. NEVER use AI cliches or generic slop (e.g. 'delve', 'testament', 'tapestry', 'it is important to note', 'in conclusion', 'beacon', 'moreover', 'pivotal').\n"
+        "2. Write with organic rhythm, varied sentence lengths, and genuine human pacing.\n"
+        "3. If drafting an email, format complete with a clear 'Subject:' line and polished message body.\n"
+        "4. If drafting notes, use clear readable headings and concise bullet points.\n"
+        "5. If drafting a message/SMS, be concise, direct, and conversational.\n"
+        f"6. Context profile: {payload.context}. Tone guidance: {payload.tone or 'natural and direct'}."
+    )
+    if exemplars:
+        system_instruction += "\nAuthor's authentic voice exemplars:\n" + "\n".join(f"- {ex}" for ex in exemplars[:2])
+
+    chat_history: List[Dict[str, str]] = [{"role": "system", "content": system_instruction}]
+
+    if payload.messages and len(payload.messages) > 0:
+        for msg in payload.messages:
+            chat_history.append({"role": msg.role, "content": msg.content})
+    else:
+        chat_history.append({"role": "user", "content": prompt_text})
+
+    llm_result = await resilient_llm_service.complete(
+        messages=chat_history,
+        temperature=0.7,
+        max_tokens=1500,
+    )
+
+    return ChatComposeResponse(
+        reply=llm_result.text,
+        words_consumed=words_consumed,
+        quota_remaining=remaining_quota,
+        provider=llm_result.provider,
+    )

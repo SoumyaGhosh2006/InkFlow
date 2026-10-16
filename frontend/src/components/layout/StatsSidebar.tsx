@@ -45,7 +45,7 @@ export const StatsSidebar: React.FC = () => {
       setPricingModalOpen(true);
     }
   };
-  const limit = user?.weeklyWordLimit || 2500;
+  const limit = user?.weeklyWordLimit || 3000;
   const wordsUsed = user?.wordsUsedThisWeek || 420;
   const wordsLeft = Math.max(0, limit - wordsUsed);
   const percentUsed = isPro ? 10 : Math.min(100, Math.round((wordsUsed / limit) * 100));
@@ -72,11 +72,11 @@ export const StatsSidebar: React.FC = () => {
           </div>
         </div>
 
-        {/* Weekly Quota Card */}
+        {/* Daily Quota Card */}
         <div className="p-5 rounded-2xl bg-canvas border border-surface-border shadow-subtle space-y-4">
           <div className="flex items-center justify-between">
             <span className="text-xs font-semibold uppercase tracking-wider text-ink-secondary">
-              Weekly Quota
+              Daily Quota
             </span>
             <span className="text-xs font-mono font-medium text-ink-primary">
               {isPro ? 'Unlimited' : `${wordsUsed.toLocaleString()} / ${limit.toLocaleString()} w`}
@@ -100,8 +100,8 @@ export const StatsSidebar: React.FC = () => {
           )}
 
           <div className="flex items-center justify-between text-xs text-ink-secondary">
-            <span>{isPro ? 'No weekly limits' : `${wordsLeft.toLocaleString()} words left`}</span>
-            <span className="text-[11px] text-stone-500 font-mono">Resets Mon 00:00 UTC</span>
+            <span>{isPro ? 'No daily limits' : `${wordsLeft.toLocaleString()} words left today`}</span>
+            <span className="text-[11px] text-stone-500 font-mono">Resets Daily 00:00 UTC</span>
           </div>
 
           {!isPro && (

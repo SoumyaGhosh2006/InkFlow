@@ -30,7 +30,7 @@ export const TopBar: React.FC = () => {
   } = useStudioStore();
 
   const wordCount = inputDraft.trim().split(/\s+/).filter(Boolean).length;
-  const isOverLimit = wordCount > 500;
+  const isOverLimit = wordCount > 1000;
 
   return (
     <div className="flex flex-wrap items-center justify-between gap-4 p-4 bg-surface border-b border-surface-border">
@@ -83,23 +83,23 @@ export const TopBar: React.FC = () => {
 
       {/* Right: Word Limit Meter & Transform CTA */}
       <div className="flex items-center space-x-4">
-        {/* 500-Word Pass Limit Counter */}
+        {/* 1,000-Word Pass Limit Counter */}
         <div className="flex items-center space-x-1.5 text-xs font-mono">
           <span
             className={
               isOverLimit
                 ? 'text-red-600 font-bold flex items-center space-x-1'
-                : wordCount > 450
+                : wordCount > 950
                 ? 'text-amber-600 font-semibold'
                 : 'text-ink-secondary'
             }
           >
             {isOverLimit && <AlertCircle className="w-3.5 h-3.5 mr-1" />}
-            {wordCount} / 500 words
+            {wordCount} / 1,000 words
           </span>
           {isOverLimit && (
             <span className="text-[11px] text-red-500 font-sans">
-              (Cap at 500w for low-latency passes)
+              (Cap at 1,000w for quality passes)
             </span>
           )}
         </div>
@@ -108,17 +108,17 @@ export const TopBar: React.FC = () => {
         <button
           onClick={triggerTransform}
           disabled={isTransforming || wordCount === 0 || isOverLimit}
-          className="px-5 py-2 rounded-xl bg-accent-primary hover:bg-accent-hover disabled:bg-stone-300 disabled:cursor-not-allowed text-stone-900 font-semibold text-xs flex items-center space-x-2 shadow-xs transition-all"
+          className="px-5 py-2 rounded-xl bg-accent-primary hover:bg-accent-hover disabled:bg-stone-300 disabled:cursor-not-allowed text-stone-900 font-semibold text-xs flex items-center space-x-2 shadow-xs transition-all cursor-pointer"
         >
           {isTransforming ? (
             <>
               <Loader2 className="w-3.5 h-3.5 animate-spin text-stone-900" />
-              <span>Personalizing...</span>
+              <span>Humanizing...</span>
             </>
           ) : (
             <>
               <Sparkles className="w-3.5 h-3.5 text-stone-900" />
-              <span>Transform Draft</span>
+              <span>Humanize Draft</span>
             </>
           )}
         </button>

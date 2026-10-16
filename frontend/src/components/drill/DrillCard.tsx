@@ -1,35 +1,41 @@
 /**
  * DrillCard Component
- * Implements the 60-Second Timed Voice Calibration Drill.
+ * Implements the 2-Minute Timed Voice Calibration Drill.
  *
  * Rationale:
- * Adheres to docs/frontend.md Section 3 View 1:
- * - 3 situational questions fetched from API.
- * - Radial 60s SVG countdown ring.
- * - Smooth horizontal Framer Motion slide transitions.
+ * Adheres to linguistic calibration guidelines (Pennebaker & King, Boston Cookie Theft,
+ * Labov & Waletzky, Procedural instruction):
+ * - 4 research-backed scenarios fetched from API.
+ * - 120-second (2-minute) radial countdown ring.
+ * - Image display for visual descriptive scenarios (e.g. Boston Cookie Theft Task).
+ * - Mandatory answer validation: author must provide an answer before advancing.
  * - Unlocks Style Genome via GenomeReveal celebratory modal.
  */
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowRight, Sparkles, Loader2, RefreshCw } from 'lucide-react';
+import { ArrowRight, Sparkles, Loader2, RefreshCw, AlertCircle } from 'lucide-react';
 import { DrillCountdown } from './DrillCountdown';
 import { GenomeReveal } from './GenomeReveal';
 import { drillApi } from '../../lib/api';
 import type { DrillPrompt, DrillAnswer, StyleGenomeResponse } from '../../types/api';
+
+const DEFAULT_DRILL_TIME_SECONDS = 120; // 2 minutes
 
 export const DrillCard: React.FC = () => {
   const [prompts, setPrompts] = useState<DrillPrompt[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [currentText, setCurrentText] = useState('');
-  const [timeLeft, setTimeLeft] = useState(60);
+  const [timeLeft, setTimeLeft] = useState(DEFAULT_DRILL_TIME_SECONDS);
   const [isTimerRunning, setIsTimerRunning] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [validationError, setValidationError] = useState<string | null>(null);
   const [unlockedGenome, setUnlockedGenome] = useState<StyleGenomeResponse | null>(null);
 
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const textareaRef = useRef<HTMLTextAreaElement | null>(null);
 
   // Load scenarios on mount
   useEffect(() => {
@@ -40,7 +46,7 @@ export const DrillCard: React.FC = () => {
       if (mounted) {
         setPrompts(data);
         setIsLoading(false);
-        setTimeLeft(data[0]?.timeLimitSeconds || 60);
+        setTimeLeft(data[0]?.timeLimitSeconds || DEFAULT_DRILL_TIME_SECONDS);
         setIsTimerRunning(true);
       }
     };
@@ -56,22 +62,25 @@ export const DrillCard: React.FC = () => {
     currentTextRef.current = currentText;
   }, [currentText]);
 
-  const handleNextPrompt = useCallback(async () => {
+  const advanceScenario = useCallback(async (forcedAnswer?: string) => {
     if (prompts.length === 0) return;
 
     const currentPrompt = prompts[currentIndex];
+    const textToSave = forcedAnswer !== undefined ? forcedAnswer : currentTextRef.current.trim();
+    
     const updatedAnswers = {
       ...answers,
-      [currentPrompt.id]: currentTextRef.current.trim() || 'No answer provided in 60s.',
+      [currentPrompt.id]: textToSave,
     };
     setAnswers(updatedAnswers);
     setCurrentText('');
+    setValidationError(null);
 
     if (currentIndex < prompts.length - 1) {
       setCurrentIndex((prev) => prev + 1);
-      setTimeLeft(prompts[currentIndex + 1]?.timeLimitSeconds || 60);
+      setTimeLeft(prompts[currentIndex + 1]?.timeLimitSeconds || DEFAULT_DRILL_TIME_SECONDS);
     } else {
-      // All 3 completed — submit and unlock genome
+      // All scenarios completed — submit and unlock genome
       setIsTimerRunning(false);
       setIsSubmitting(true);
 
@@ -93,21 +102,38 @@ export const DrillCard: React.FC = () => {
     }
   }, [answers, currentIndex, prompts]);
 
-  const handleNextPromptRef = useRef(handleNextPrompt);
+  const advanceScenarioRef = useRef(advanceScenario);
   useEffect(() => {
-    handleNextPromptRef.current = handleNextPrompt;
-  }, [handleNextPrompt]);
+    advanceScenarioRef.current = advanceScenario;
+  }, [advanceScenario]);
 
-  // 60-second countdown tick
+  // Handle manual click to Next Question with mandatory validation
+  const handleNextClick = () => {
+    const trimmed = currentText.trim();
+    if (!trimmed) {
+      setValidationError('Please type your answer to this question before moving forward.');
+      textareaRef.current?.focus();
+      return;
+    }
+    setValidationError(null);
+    advanceScenario();
+  };
+
+  // 120-second countdown tick
   useEffect(() => {
     if (!isTimerRunning || isLoading) return;
 
     timerRef.current = setInterval(() => {
       setTimeLeft((prev) => {
         if (prev <= 1) {
-          // Timer expired: auto-advance
-          handleNextPromptRef.current();
-          return 60;
+          // If time expires and user has written something, advance automatically
+          if (currentTextRef.current.trim()) {
+            advanceScenarioRef.current();
+            return DEFAULT_DRILL_TIME_SECONDS;
+          }
+          // If empty, pause at 0 and urge the user to answer
+          setValidationError("Time's up for this question! Please enter your quick thoughts to proceed.");
+          return 0;
         }
         return prev - 1;
       });
@@ -122,7 +148,8 @@ export const DrillCard: React.FC = () => {
     setCurrentIndex(0);
     setAnswers({});
     setCurrentText('');
-    setTimeLeft(prompts[0]?.timeLimitSeconds || 60);
+    setValidationError(null);
+    setTimeLeft(prompts[0]?.timeLimitSeconds || DEFAULT_DRILL_TIME_SECONDS);
     setIsTimerRunning(true);
     setUnlockedGenome(null);
   };
@@ -138,12 +165,13 @@ export const DrillCard: React.FC = () => {
 
   const currentPrompt = prompts[currentIndex] || {
     id: 'scenario_1',
-    scenario: 'Scenario 1',
-    prompt: 'Write your natural response...',
-    hint: 'Type instinctively.',
+    scenario: 'Stream of Consciousness',
+    prompt: "Write whatever is on your mind right now. Don't edit.",
+    hint: 'Pennebaker & King 1999 — reveals small words, sentence length, and emotion words.',
   };
 
   const wordCount = currentText.trim().split(/\s+/).filter(Boolean).length;
+  const totalLimit = currentPrompt.timeLimitSeconds || DEFAULT_DRILL_TIME_SECONDS;
 
   return (
     <div className="flex-1 flex flex-col items-center justify-center p-8 max-w-4xl mx-auto w-full">
@@ -174,7 +202,7 @@ export const DrillCard: React.FC = () => {
 
         <button
           onClick={handleReset}
-          className="text-xs text-ink-secondary hover:text-ink-primary flex items-center space-x-1"
+          className="text-xs text-ink-secondary hover:text-ink-primary flex items-center space-x-1 cursor-pointer"
         >
           <RefreshCw className="w-3.5 h-3.5" />
           <span>Reset</span>
@@ -206,17 +234,39 @@ export const DrillCard: React.FC = () => {
                 </p>
               </div>
 
-              {/* Radial Countdown Ring */}
-              <DrillCountdown timeLeft={timeLeft} totalTime={60} />
+              {/* Radial Countdown Ring (120s / 2 Minutes) */}
+              <DrillCountdown timeLeft={timeLeft} totalTime={totalLimit} />
             </div>
+
+            {/* Stimulus Image if provided (e.g. Boston Cookie Theft) */}
+            {currentPrompt.imageUrl && (
+              <div className="w-full flex flex-col items-center justify-center p-3 bg-stone-50 rounded-2xl border border-stone-200/80">
+                <img
+                  src={currentPrompt.imageUrl}
+                  alt={currentPrompt.scenario}
+                  className="max-h-60 object-contain rounded-lg shadow-xs"
+                />
+                <span className="text-[11px] text-stone-500 mt-1.5 italic font-sans">
+                  Stimulus drawing from Boston Diagnostic Aphasia Examination (Goodglass & Kaplan, 1972)
+                </span>
+              </div>
+            )}
 
             {/* Borderless Writing Canvas */}
             <div className="relative">
               <textarea
+                ref={textareaRef}
                 value={currentText}
-                onChange={(e) => setCurrentText(e.target.value)}
-                placeholder="Start typing instinctively... Your natural rhythm, punctuation pauses, and phrasing will be analyzed."
-                className="w-full h-44 p-4 text-base font-normal leading-relaxed text-ink-primary bg-canvas rounded-2xl border border-surface-border focus:outline-none focus:ring-2 focus:ring-accent-primary/20 focus:border-accent-primary transition-all resize-none placeholder:text-stone-400"
+                onChange={(e) => {
+                  setCurrentText(e.target.value);
+                  if (validationError) setValidationError(null);
+                }}
+                placeholder="Start typing instinctively... Your natural rhythm, sentence lengths, and word choices will calibrate your Style Genome."
+                className={`w-full h-44 p-4 text-base font-normal leading-relaxed text-ink-primary bg-canvas rounded-2xl border transition-all resize-none placeholder:text-stone-400 focus:outline-none focus:ring-2 ${
+                  validationError
+                    ? 'border-red-400 focus:ring-red-200'
+                    : 'border-surface-border focus:ring-accent-primary/20 focus:border-accent-primary'
+                }`}
                 autoFocus
               />
 
@@ -226,16 +276,24 @@ export const DrillCard: React.FC = () => {
               </div>
             </div>
 
+            {/* Validation Error Prompt */}
+            {validationError && (
+              <div className="p-3 rounded-xl bg-red-50 border border-red-200 text-red-700 text-xs flex items-center space-x-2 animate-in fade-in">
+                <AlertCircle className="w-4 h-4 flex-shrink-0 text-red-600" />
+                <span className="font-medium">{validationError}</span>
+              </div>
+            )}
+
             {/* Bottom Actions */}
             <div className="flex items-center justify-between pt-2">
               <span className="text-xs text-stone-400">
-                Auto-advances when the 60s timer expires.
+                2-minute timed response. Answers are required to calibrate accurately.
               </span>
 
               <button
-                onClick={handleNextPrompt}
+                onClick={handleNextClick}
                 disabled={isSubmitting}
-                className="px-6 py-3 rounded-xl bg-ink-primary hover:bg-stone-800 disabled:bg-stone-300 text-white font-medium text-sm flex items-center space-x-2 shadow-sm transition-all"
+                className="px-6 py-3 rounded-xl bg-ink-primary hover:bg-stone-800 disabled:bg-stone-300 text-white font-medium text-sm flex items-center space-x-2 shadow-sm transition-all cursor-pointer"
               >
                 {isSubmitting ? (
                   <>
@@ -247,7 +305,7 @@ export const DrillCard: React.FC = () => {
                     <span>
                       {currentIndex === prompts.length - 1
                         ? 'Finish Calibration'
-                        : 'Next Scenario'}
+                        : 'Next Question'}
                     </span>
                     <ArrowRight className="w-4 h-4" />
                   </>

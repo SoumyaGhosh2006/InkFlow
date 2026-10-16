@@ -19,15 +19,17 @@ export const AppHeader: React.FC = () => {
   const getTitle = () => {
     switch (activeView) {
       case 'studio':
-        return 'Transformation Studio';
+        return 'Humanize Studio';
+      case 'chat':
+        return 'AI Chat Writer';
       case 'drill':
-        return '60-Second Voice Calibration Drill';
+        return 'Voice Calibration Drill (2-Min)';
       case 'evolution':
         return 'Writing Evolution & Evals';
       case 'pricing':
         return 'Subscription Plans';
       default:
-        return 'Studio';
+        return 'Humanize';
     }
   };
 

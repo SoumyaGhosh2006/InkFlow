@@ -9,7 +9,7 @@
 
 import React, { useEffect } from 'react';
 import * as Tooltip from '@radix-ui/react-tooltip';
-import { PenSquare, Zap, BarChart3, CreditCard, Sparkles } from 'lucide-react';
+import { PenSquare, MessageSquare, Zap, BarChart3, CreditCard, Sparkles } from 'lucide-react';
 import { useStudioStore, type AppView } from '../../store/useStudioStore';
 
 interface NavItem {
@@ -23,33 +23,39 @@ const NAV_ITEMS: NavItem[] = [
   {
     id: 'studio',
     icon: PenSquare,
-    label: 'Transformation Studio',
+    label: 'Humanize Studio',
     shortcut: '⌘1',
+  },
+  {
+    id: 'chat',
+    icon: MessageSquare,
+    label: 'AI Writer & Chat',
+    shortcut: '⌘2',
   },
   {
     id: 'drill',
     icon: Zap,
     label: 'Voice Calibration Drill',
-    shortcut: '⌘2',
+    shortcut: '⌘3',
   },
   {
     id: 'evolution',
     icon: BarChart3,
     label: 'Writing Evolution & Evals',
-    shortcut: '⌘3',
+    shortcut: '⌘4',
   },
   {
     id: 'pricing',
     icon: CreditCard,
     label: 'Pro Subscription',
-    shortcut: '⌘4',
+    shortcut: '⌘5',
   },
 ];
 
 export const NavigationDock: React.FC = () => {
   const { activeView, setActiveView, isPricingModalOpen, setPricingModalOpen } = useStudioStore();
 
-  // Register global ⌘1, ⌘2, ⌘3, ⌘4 keyboard shortcuts
+  // Register global ⌘1, ⌘2, ⌘3, ⌘4, ⌘5 keyboard shortcuts
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.metaKey || e.ctrlKey) {
@@ -58,11 +64,14 @@ export const NavigationDock: React.FC = () => {
           setActiveView('studio');
         } else if (e.key === '2') {
           e.preventDefault();
-          setActiveView('drill');
+          setActiveView('chat');
         } else if (e.key === '3') {
           e.preventDefault();
-          setActiveView('evolution');
+          setActiveView('drill');
         } else if (e.key === '4') {
+          e.preventDefault();
+          setActiveView('evolution');
+        } else if (e.key === '5') {
           e.preventDefault();
           setPricingModalOpen(true);
         }

@@ -13,6 +13,7 @@ import { NavigationDock } from './components/layout/NavigationDock';
 import { AppHeader } from './components/layout/AppHeader';
 import { StatsSidebar } from './components/layout/StatsSidebar';
 import { TransformationStudio } from './components/studio/TransformationStudio';
+import { ChatWriterView } from './components/chat/ChatWriterView';
 import { DrillCard } from './components/drill/DrillCard';
 import { WritingEvolutionView } from './components/evolution/WritingEvolutionView';
 import { UpgradeModal } from './components/payments/UpgradeModal';
@@ -57,6 +58,8 @@ export const App: React.FC = () => {
       case 'studio':
       case 'pricing':
         return <TransformationStudio />;
+      case 'chat':
+        return <ChatWriterView />;
       case 'drill':
         return (
           <div className="flex-1 bg-canvas flex flex-col overflow-y-auto">

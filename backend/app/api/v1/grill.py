@@ -51,17 +51,17 @@ class DrillAnalyzeRequest(BaseModel):
 @router.get(
     "/prompts",
     response_model=List[Dict[str, Any]],
-    summary="Get 3 unlabelled situational scenarios for 60-second timed drill",
+    summary="Get research-backed situational scenarios for 2-minute timed drill",
 )
 async def get_grill_prompts(
     current_user: Dict[str, Any] = Depends(get_current_user),
 ) -> List[Dict[str, Any]]:
     """
     GET /api/v1/grill/prompts:
-    Returns 3 unlabelled situational scenarios for the 60-second timed drill.
+    Returns research-backed situational scenarios for the 2-minute timed drill.
     Contract specified in docs/backend.md Section 8.
     """
-    return grill_service.get_timed_prompts(count=3)
+    return grill_service.get_timed_prompts(count=4)
 
 
 @router.get("/questions", response_model=List[Dict[str, Any]], include_in_schema=False)
@@ -69,7 +69,7 @@ async def get_drill_questions(
     current_user: Dict[str, Any] = Depends(get_current_user),
 ) -> List[Dict[str, Any]]:
     """Backward-compatible alias for /prompts."""
-    return grill_service.get_timed_prompts(count=3)
+    return grill_service.get_timed_prompts(count=4)
 
 
 @router.post(

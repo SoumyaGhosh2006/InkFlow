@@ -31,6 +31,7 @@ import time
 from typing import Dict, Any, List, Optional, Tuple
 from fastapi import HTTPException, status
 
+from app.core.config import settings
 from app.core.sentry import trace_pipeline_stage
 from app.models.rewrite import (
     RewriteRequest,
@@ -85,12 +86,13 @@ class RewritePipelineService:
         word_count = count_words(raw_text)
 
         # ----------------------------------------------------------------------
-        # Input Validation: 500 Words Per Pass Hard Limit (backend.md Section 4)
+        # Input Validation: 1000 Words Per Pass Hard Limit
         # ----------------------------------------------------------------------
-        if word_count > 500:
+        max_prompt_words = getattr(settings, "MAX_WORDS_PER_PROMPT", 1000)
+        if word_count > max_prompt_words:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Input exceeds maximum allowed length of 500 words per pass (received {word_count} words).",
+                detail=f"Input exceeds maximum allowed length of {max_prompt_words} words per pass (received {word_count} words).",
             )
 
         stage_logs: List[RewriteStageLog] = []

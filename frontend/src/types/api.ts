@@ -26,6 +26,7 @@ export interface DrillPrompt {
   timeLimitSeconds?: number;
   hint?: string;
   context?: string;
+  imageUrl?: string;
 }
 
 export interface DrillAnswer {
@@ -143,4 +144,23 @@ export interface RazorpayOrderResponse {
   amount: number;
   currency: string;
   key_id?: string;
+}
+
+export interface ChatMessage {
+  role: 'user' | 'assistant' | 'system';
+  content: string;
+}
+
+export interface ChatComposeRequest {
+  prompt?: string;
+  messages?: ChatMessage[];
+  context?: string;
+  tone?: string;
+}
+
+export interface ChatComposeResponse {
+  reply: string;
+  words_consumed: number;
+  quota_remaining: number;
+  provider: string;
 }

@@ -13,7 +13,7 @@ import type {
 import { rewriteApi } from '../lib/api';
 import { useAuthStore } from './useAuthStore';
 
-export type AppView = 'studio' | 'drill' | 'evolution' | 'pricing';
+export type AppView = 'studio' | 'chat' | 'drill' | 'evolution' | 'pricing';
 
 interface StudioState {
   // Navigation
@@ -60,6 +60,7 @@ interface StudioState {
   triggerTransform: () => Promise<void>;
   acceptRewrite: () => Promise<void>;
   resetEditor: () => void;
+  transferToHumanize: (text: string) => void;
 }
 
 const CYCLER_PHASES = [
@@ -192,6 +193,17 @@ export const useStudioStore = create<StudioState>((set, get) => ({
       meaningCheckFailed: false,
       meaningWarning: null,
       showDiff: false,
+    });
+  },
+
+  transferToHumanize: (text: string) => {
+    set({
+      inputDraft: text,
+      transformedDraft: '',
+      meaningCheckFailed: false,
+      meaningWarning: null,
+      showDiff: false,
+      activeView: 'studio',
     });
   },
 }));

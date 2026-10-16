@@ -250,21 +250,21 @@ async def test_punctuation_quirks_preservation(sample_genome):
 
 
 @pytest.mark.asyncio
-async def test_500_word_cap_exceeded_raises_400(sample_genome):
+async def test_1000_word_cap_exceeded_raises_400(sample_genome):
     """
-    Verifies that inputs exceeding 500 words per pass raise HTTP 400 Bad Request.
+    Verifies that inputs exceeding 1,000 words per pass raise HTTP 400 Bad Request.
     """
     pipeline = RewritePipelineService()
-    oversized_text = "word " * 501
+    oversized_text = "word " * 1001
     request = RewriteRequest(input=oversized_text)
 
     with pytest.raises(HTTPException) as exc_info:
         await pipeline.execute(
             request=request,
             genome=sample_genome,
-            words_consumed=501,
+            words_consumed=1001,
             quota_remaining=2500,
         )
 
     assert exc_info.value.status_code == 400
-    assert "Input exceeds maximum allowed length of 500 words" in exc_info.value.detail
+    assert "Input exceeds maximum allowed length of 1000 words" in exc_info.value.detail

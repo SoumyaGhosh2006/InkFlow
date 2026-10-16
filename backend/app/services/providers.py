@@ -197,19 +197,19 @@ class ResilientLLMService:
     @property
     def primary_timeout(self) -> httpx.Timeout:
         return httpx.Timeout(
-            connect=settings.PRIMARY_CONNECT_TIMEOUT,
-            read=settings.PRIMARY_READ_TIMEOUT,
-            write=5.0,
-            pool=5.0,
+            connect=max(10.0, settings.PRIMARY_CONNECT_TIMEOUT),
+            read=max(30.0, settings.PRIMARY_READ_TIMEOUT),
+            write=10.0,
+            pool=10.0,
         )
 
     @property
     def fallback_timeout(self) -> httpx.Timeout:
         return httpx.Timeout(
-            connect=settings.FALLBACK_CONNECT_TIMEOUT,
-            read=settings.FALLBACK_READ_TIMEOUT,
-            write=5.0,
-            pool=5.0,
+            connect=max(10.0, settings.FALLBACK_CONNECT_TIMEOUT),
+            read=max(30.0, settings.FALLBACK_READ_TIMEOUT),
+            write=10.0,
+            pool=10.0,
         )
 
     async def complete(

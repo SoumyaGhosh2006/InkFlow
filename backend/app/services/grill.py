@@ -32,22 +32,44 @@ from app.services.evals import (
 
 logger = logging.getLogger("inkflow.grill")
 
-# Curated bank of 3 unlabelled situational scenarios for the 60-second timed drill
+# Curated bank of 4 research-backed situational scenarios for the 2-minute timed drill
 GRILL_PROMPTS: List[Dict[str, Any]] = [
     {
         "id": "scenario_1",
-        "prompt": "Take a strong stance: Is remote work a productivity blessing or a culture killer? Answer in 2 distinct sentences.",
-        "target_seconds": 60,
+        "title": "Stream of Consciousness",
+        "scenario": "Stream of Consciousness",
+        "prompt": "Write whatever is on your mind right now. Don't edit.",
+        "hint": "Pennebaker & King 1999 — reveals small words (I, the, but), sentence length, and emotion words.",
+        "target_seconds": 120,
+        "time_limit": 120,
     },
     {
         "id": "scenario_2",
-        "prompt": "Describe the most frustrating meeting or interaction you endured this month without using ANY corporate jargon or buzzwords.",
-        "target_seconds": 60,
+        "title": "Boston Cookie Theft Task",
+        "scenario": "Boston Cookie Theft Task",
+        "prompt": "Describe everything you see in this picture.",
+        "hint": "Goodglass & Kaplan, Boston Diagnostic Aphasia Exam (1972) — observes what details you notice, word choice, and spatial organization.",
+        "image_url": "/cookie-theft.png",
+        "target_seconds": 120,
+        "time_limit": 120,
     },
     {
         "id": "scenario_3",
-        "prompt": "Explain a complex concept you know intimately to an intelligent 18-year-old in 3 punchy, rhythmic sentences.",
-        "target_seconds": 60,
+        "title": "Emotional Narrative",
+        "scenario": "Emotional Narrative",
+        "prompt": "Write about a time you were really angry or embarrassed. What happened?",
+        "hint": "Labov & Waletzky 1967 (narrative structure) — analyzes story order, tense control, detail level, and emotional cadence.",
+        "target_seconds": 120,
+        "time_limit": 120,
+    },
+    {
+        "id": "scenario_4",
+        "title": "Procedural Explanation",
+        "scenario": "Procedural Explanation",
+        "prompt": "Explain how to make tea to someone who has never seen it.",
+        "hint": "Tests step order, precision vs. vagueness, and imperative vs. descriptive instruction style.",
+        "target_seconds": 120,
+        "time_limit": 120,
     },
 ]
 
@@ -57,14 +79,14 @@ class GrillService:
     Manages timed drill delivery and initial Style Genome extraction.
     """
 
-    def get_timed_prompts(self, count: int = 3) -> List[Dict[str, Any]]:
+    def get_timed_prompts(self, count: int = 4) -> List[Dict[str, Any]]:
         """
-        Retrieves 3 unlabelled situational scenarios for the 60-second timed drill.
+        Retrieves research-backed situational scenarios for the 2-minute timed drill.
         Contract specified in docs/backend.md Section 8.
         """
         return GRILL_PROMPTS[:count]
 
-    def get_timed_questions(self, count: int = 3) -> List[Dict[str, Any]]:
+    def get_timed_questions(self, count: int = 4) -> List[Dict[str, Any]]:
         """Alias for backward compatibility with existing tests."""
         return self.get_timed_prompts(count)
 

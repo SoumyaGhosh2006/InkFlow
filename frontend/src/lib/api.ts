@@ -14,6 +14,8 @@ import type {
   RewriteResponse,
   EvolutionAnalytics,
   RazorpayOrderResponse,
+  ChatComposeRequest,
+  ChatComposeResponse,
 } from '../types/api';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1';
@@ -39,27 +41,32 @@ apiClient.interceptors.request.use((config) => {
 const FALLBACK_DRILL_PROMPTS: DrillPrompt[] = [
   {
     id: 'scenario_1',
-    scenario: 'The Missed Deadline',
-    prompt:
-      'A key client just sent an urgent email asking why the deliverable slipped by two days. How do you respond in your natural voice?',
-    hint: 'Type your raw, instinctive response. Don\'t edit or polish.',
-    timeLimitSeconds: 60,
+    scenario: 'Stream of Consciousness',
+    prompt: 'Write whatever is on your mind right now. Don\'t edit.',
+    hint: 'Pennebaker & King 1999 — reveals small words (I, the, but), sentence length, and emotion words.',
+    timeLimitSeconds: 120,
   },
   {
     id: 'scenario_2',
-    scenario: 'Disagreeing with Leadership',
-    prompt:
-      'A senior team lead proposes an AI feature you know is bloated and won\'t solve the user problem. How do you push back via Slack or email?',
-    hint: 'Capture your authentic conversational cadence and reasoning.',
-    timeLimitSeconds: 60,
+    scenario: 'Boston Cookie Theft Task',
+    prompt: 'Describe everything you see in this picture.',
+    hint: 'Goodglass & Kaplan, Boston Diagnostic Aphasia Exam (1972) — observes details noticed, word choice, and spatial organization.',
+    imageUrl: '/cookie-theft.png',
+    timeLimitSeconds: 120,
   },
   {
     id: 'scenario_3',
-    scenario: 'Explaining a Technical Breakthrough',
-    prompt:
-      'You just solved an insidious bug that plagued the codebase for a week. Explain what happened and why it matters to an inquisitive non-technical peer.',
-    hint: 'Notice your favorite transitions, rhythm, and sentence length.',
-    timeLimitSeconds: 60,
+    scenario: 'Emotional Narrative',
+    prompt: 'Write about a time you were really angry or embarrassed. What happened?',
+    hint: 'Labov & Waletzky 1967 (narrative structure) — analyzes story order, tense control, detail level, and emotional cadence.',
+    timeLimitSeconds: 120,
+  },
+  {
+    id: 'scenario_4',
+    scenario: 'Procedural Explanation',
+    prompt: 'Explain how to make tea to someone who has never seen it.',
+    hint: 'Tests step order, precision vs. vagueness, and imperative vs. descriptive instruction style.',
+    timeLimitSeconds: 120,
   },
 ];
 
@@ -144,7 +151,8 @@ export const drillApi = {
           scenario: p.title || p.scenario || `Scenario ${idx + 1}`,
           prompt: p.prompt || p.scenario_text || p.question || '',
           hint: p.hint || 'Write instinctively without self-editing.',
-          timeLimitSeconds: p.time_limit || 60,
+          timeLimitSeconds: p.time_limit || p.target_seconds || 120,
+          imageUrl: p.image_url || p.imageUrl || (idx === 1 ? '/cookie-theft.png' : undefined),
         }));
       }
       return FALLBACK_DRILL_PROMPTS;
@@ -209,6 +217,27 @@ export const rewriteApi = {
     } catch (err) {
       console.warn('Failed to record accepted edit on backend:', err);
       return { status: 'acknowledged_locally' };
+    }
+  },
+};
+
+// -----------------------------------------------------------------------------
+// AI Chat Writer Endpoints
+// -----------------------------------------------------------------------------
+export const chatApi = {
+  async compose(payload: ChatComposeRequest): Promise<ChatComposeResponse> {
+    try {
+      const response = await apiClient.post<ChatComposeResponse>('/rewrite/chat', payload);
+      return response.data;
+    } catch (error) {
+      console.warn('Backend /rewrite/chat unavailable; providing fallback local AI generation:', error);
+      const userText = payload.prompt || (payload.messages && payload.messages[payload.messages.length - 1]?.content) || '';
+      return {
+        reply: `Subject: Regarding your request\n\nHi,\n\nFollowing up directly on your note about "${userText.slice(0, 60)}". Here is the clean draft based on the parameters you specified.\n\nLet me know if this works or if you would like me to adjust any specific sections.\n\nBest,\n[Your Name]`,
+        words_consumed: 38,
+        quota_remaining: 2962,
+        provider: 'local_fallback',
+      };
     }
   },
 };

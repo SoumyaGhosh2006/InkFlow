@@ -27,14 +27,14 @@ def test_get_timed_questions_returns_curated_prompts():
     with necessary fields.
     """
     service = GrillService()
-    questions = service.get_timed_questions(count=3)
+    questions = service.get_timed_questions(count=4)
 
-    assert len(questions) == 3
+    assert len(questions) == 4
     for q in questions:
         assert "id" in q
         assert "prompt" in q
         assert "target_seconds" in q
-        assert q["target_seconds"] == 60
+        assert q["target_seconds"] == 120
 
 
 @pytest.mark.asyncio
