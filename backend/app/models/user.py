@@ -91,7 +91,7 @@ class UserResponse(BaseModel):
     displayName: Optional[str] = Field(None, description="Display name.")
     tier: UserTier = Field(default=UserTier.FREE, description="Subscription tier ('free' or 'pro').")
     wordsUsedThisWeek: int = Field(default=0, description="Words consumed during current weekly cycle.")
-    weeklyWordLimit: int = Field(default=2500, description="Weekly word allowance (2,500 on Free tier).")
+    weeklyWordLimit: int = Field(default=1500, description="Daily word allowance (1,500 on Free tier).")
     lastWeekReset: datetime = Field(..., description="Monday 00:00:00 UTC boundary timestamp.")
     streakDays: int = Field(default=1, description="Consecutive writing streak days.")
     is_active: bool = Field(default=True, description="Account active flag.")

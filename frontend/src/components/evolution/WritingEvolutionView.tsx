@@ -14,7 +14,7 @@ import { EvolutionFeed } from './EvolutionFeed';
 
 export const WritingEvolutionView: React.FC = () => {
   return (
-    <div className="flex-1 overflow-y-auto p-8 bg-canvas">
+    <div className="flex-1 overflow-y-auto p-4 sm:p-6 md:p-8 bg-canvas">
       <div className="max-w-5xl mx-auto space-y-8">
         {/* Page Title */}
         <div className="space-y-1">

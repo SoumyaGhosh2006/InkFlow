@@ -9,13 +9,13 @@
  */
 
 import React, { useEffect } from 'react';
-import { Flame, Crown, RefreshCw, Sparkles, ShieldCheck } from 'lucide-react';
+import { Flame, Crown, RefreshCw, Sparkles, ShieldCheck, X } from 'lucide-react';
 import { useAuthStore } from '../../store/useAuthStore';
 import { useStudioStore } from '../../store/useStudioStore';
 
 export const StatsSidebar: React.FC = () => {
   const { user, fetchUser, loginWithGoogle } = useAuthStore();
-  const { setPricingModalOpen, setActiveView } = useStudioStore();
+  const { setPricingModalOpen, setActiveView, setStatsDrawerOpen } = useStudioStore();
 
   useEffect(() => {
     fetchUser();
@@ -45,14 +45,14 @@ export const StatsSidebar: React.FC = () => {
       setPricingModalOpen(true);
     }
   };
-  const limit = user?.weeklyWordLimit || 3000;
-  const wordsUsed = user?.wordsUsedThisWeek || 420;
+  const limit = isPro ? 999999 : (user?.weeklyWordLimit && user.weeklyWordLimit <= 1500 ? user.weeklyWordLimit : 1500);
+  const wordsUsed = user?.wordsUsedThisWeek || 215;
   const wordsLeft = Math.max(0, limit - wordsUsed);
   const percentUsed = isPro ? 10 : Math.min(100, Math.round((wordsUsed / limit) * 100));
-  const streakDays = user?.streakDays || 4;
+  const streakDays = user?.streakDays || 1;
 
   return (
-    <aside className="w-80 flex-shrink-0 bg-surface border-l border-surface-border p-6 flex flex-col justify-between overflow-y-auto">
+    <aside className="w-full xl:w-80 h-full flex-shrink-0 bg-surface border-l border-surface-border p-6 flex flex-col justify-between overflow-y-auto">
       <div className="space-y-6">
         {/* Streak & Status Pill */}
         <div className="flex items-center justify-between">
@@ -61,14 +61,23 @@ export const StatsSidebar: React.FC = () => {
             <span className="text-xs font-semibold tracking-wide">{streakDays} Day Streak</span>
           </div>
 
-          <div
-            className={`px-2.5 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider ${
-              isPro
-                ? 'bg-amber-100 text-amber-900 border border-amber-300'
-                : 'bg-stone-100 text-stone-600'
-            }`}
-          >
-            {isPro ? 'Pro Active' : 'Free Tier'}
+          <div className="flex items-center space-x-2">
+            <div
+              className={`px-2.5 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider ${
+                isPro
+                  ? 'bg-amber-100 text-amber-900 border border-amber-300'
+                  : 'bg-stone-100 text-stone-600'
+              }`}
+            >
+              {isPro ? 'Pro Active' : 'Free Tier'}
+            </div>
+            <button
+              onClick={() => setStatsDrawerOpen(false)}
+              className="xl:hidden p-1 text-stone-400 hover:text-stone-700 hover:bg-stone-100 rounded-lg transition-colors cursor-pointer"
+              title="Close Sidebar"
+            >
+              <X className="w-4 h-4" />
+            </button>
           </div>
         </div>
 

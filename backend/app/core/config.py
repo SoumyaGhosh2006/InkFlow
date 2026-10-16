@@ -92,8 +92,8 @@ class Settings(BaseSettings):
     GROQ_READ_TIMEOUT: float = 8.0
 
     # --- Quota and Limit Rules ---
-    FREE_TIER_DAILY_WORD_LIMIT: int = 3000
-    FREE_TIER_WEEKLY_WORD_LIMIT: int = 3000
+    FREE_TIER_DAILY_WORD_LIMIT: int = 1500
+    FREE_TIER_WEEKLY_WORD_LIMIT: int = 1500
     MAX_WORDS_PER_PROMPT: int = 1000
 
     # --- Observability & Telemetry ---

@@ -84,12 +84,13 @@ export const NavigationDock: React.FC = () => {
 
   return (
     <Tooltip.Provider delayDuration={150}>
-      <aside className="w-14 flex-shrink-0 flex flex-col items-center justify-between py-6 bg-surface border-r border-surface-border z-20 select-none">
+      {/* Desktop Left Dock */}
+      <aside className="hidden md:flex w-14 flex-shrink-0 flex-col items-center justify-between py-6 bg-surface border-r border-surface-border z-20 select-none">
         {/* Top Logo Glyph */}
         <div className="flex flex-col items-center space-y-6">
           <button
             onClick={() => setActiveView('studio')}
-            className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-amber-500 to-amber-400 flex items-center justify-center text-white shadow-subtle hover:scale-105 transition-transform"
+            className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-amber-500 to-amber-400 flex items-center justify-center text-white shadow-subtle hover:scale-105 transition-transform cursor-pointer"
             aria-label="InkFlow Home"
           >
             <Sparkles className="w-5 h-5" />
@@ -113,7 +114,7 @@ export const NavigationDock: React.FC = () => {
                           setActiveView(item.id);
                         }
                       }}
-                      className={`relative w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-200 ${
+                      className={`relative w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-200 cursor-pointer ${
                         isActive
                           ? 'bg-amber-50 text-accent-primary font-semibold shadow-sm'
                           : 'text-ink-secondary hover:text-ink-primary hover:bg-surface-subtle'
@@ -151,6 +152,55 @@ export const NavigationDock: React.FC = () => {
           <span className="text-[10px] text-ink-muted font-mono">v1.0</span>
         </div>
       </aside>
+
+      {/* Mobile Fixed Bottom Navigation Bar */}
+      <nav
+        className="flex md:hidden fixed bottom-0 left-0 right-0 h-16 bg-surface/95 backdrop-blur-md border-t border-surface-border z-40 items-center justify-around px-2 py-1 select-none shadow-panel"
+        aria-label="Mobile Bottom Navigation"
+      >
+        {NAV_ITEMS.map((item) => {
+          const Icon = item.icon;
+          const isActive =
+            item.id === 'pricing' ? isPricingModalOpen : activeView === item.id;
+
+          return (
+            <button
+              key={item.id}
+              onClick={() => {
+                if (item.id === 'pricing') {
+                  setPricingModalOpen(true);
+                } else {
+                  setActiveView(item.id);
+                }
+              }}
+              className={`flex flex-col items-center justify-center flex-1 py-1 px-1 rounded-xl transition-all ${
+                isActive
+                  ? 'text-accent-primary font-semibold'
+                  : 'text-ink-secondary hover:text-ink-primary'
+              }`}
+            >
+              <div
+                className={`p-1 rounded-lg transition-colors ${
+                  isActive ? 'bg-amber-50' : 'bg-transparent'
+                }`}
+              >
+                <Icon className="w-5 h-5 stroke-[1.8]" />
+              </div>
+              <span className="text-[10px] tracking-tight mt-0.5 truncate max-w-[64px]">
+                {item.id === 'studio'
+                  ? 'Humanize'
+                  : item.id === 'chat'
+                  ? 'AI Writer'
+                  : item.id === 'drill'
+                  ? 'Drill'
+                  : item.id === 'evolution'
+                  ? 'Insights'
+                  : 'Pro'}
+              </span>
+            </button>
+          );
+        })}
+      </nav>
     </Tooltip.Provider>
   );
 };

@@ -52,9 +52,11 @@ interface StudioState {
   setShowDiff: (show: boolean) => void;
   toggleDiff: () => void;
 
-  // Pro Upgrade Modal
+  // Pro Upgrade Modal & Mobile Stats Drawer
   isPricingModalOpen: boolean;
   setPricingModalOpen: (open: boolean) => void;
+  isStatsDrawerOpen: boolean;
+  setStatsDrawerOpen: (open: boolean) => void;
 
   // Actions
   triggerTransform: () => Promise<void>;
@@ -111,6 +113,9 @@ export const useStudioStore = create<StudioState>((set, get) => ({
 
   isPricingModalOpen: false,
   setPricingModalOpen: (open) => set({ isPricingModalOpen: open }),
+
+  isStatsDrawerOpen: false,
+  setStatsDrawerOpen: (open) => set({ isStatsDrawerOpen: open }),
 
   triggerTransform: async () => {
     const { inputDraft, inputType, context } = get();

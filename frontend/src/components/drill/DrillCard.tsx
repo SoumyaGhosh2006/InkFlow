@@ -174,9 +174,9 @@ export const DrillCard: React.FC = () => {
   const totalLimit = currentPrompt.timeLimitSeconds || DEFAULT_DRILL_TIME_SECONDS;
 
   return (
-    <div className="flex-1 flex flex-col items-center justify-center p-8 max-w-4xl mx-auto w-full">
+    <div className="flex-1 flex flex-col items-center justify-center p-4 sm:p-6 md:p-8 max-w-4xl mx-auto w-full">
       {/* Calibration Progress Bar */}
-      <div className="w-full flex items-center justify-between mb-8 px-2">
+      <div className="w-full flex items-center justify-between mb-6 sm:mb-8 px-1 sm:px-2">
         <div className="flex items-center space-x-2">
           <Sparkles className="w-4 h-4 text-accent-primary" />
           <span className="text-xs font-semibold uppercase tracking-wider text-ink-primary">
@@ -191,7 +191,7 @@ export const DrillCard: React.FC = () => {
               key={idx}
               className={`h-2 rounded-full transition-all duration-300 ${
                 idx === currentIndex
-                  ? 'w-8 bg-accent-primary'
+                  ? 'w-6 sm:w-8 bg-accent-primary'
                   : idx < currentIndex
                   ? 'w-2 bg-emerald-500'
                   : 'w-2 bg-stone-200'
@@ -210,7 +210,7 @@ export const DrillCard: React.FC = () => {
       </div>
 
       {/* Main Card with Smooth Horizontal Framer Motion Transitions */}
-      <div className="w-full bg-surface rounded-3xl border border-surface-border shadow-panel p-8 relative overflow-hidden">
+      <div className="w-full bg-surface rounded-2xl sm:rounded-3xl border border-surface-border shadow-panel p-5 sm:p-6 md:p-8 relative overflow-hidden">
         <AnimatePresence mode="wait">
           <motion.div
             key={currentIndex}
@@ -221,12 +221,12 @@ export const DrillCard: React.FC = () => {
             className="space-y-6"
           >
             {/* Top Prompt Row with Radial Countdown */}
-            <div className="flex items-start justify-between gap-6 pb-4 border-b border-surface-border">
+            <div className="flex items-start justify-between gap-3 sm:gap-6 pb-4 border-b border-surface-border">
               <div className="space-y-2 flex-1">
                 <span className="px-2.5 py-1 rounded-lg bg-surface-subtle text-ink-secondary text-xs font-medium uppercase tracking-wide">
                   {currentPrompt.scenario}
                 </span>
-                <h2 className="text-xl md:text-2xl font-serif font-medium text-ink-primary leading-snug">
+                <h2 className="text-lg sm:text-xl md:text-2xl font-serif font-medium text-ink-primary leading-snug">
                   {currentPrompt.prompt}
                 </h2>
                 <p className="text-xs text-ink-secondary italic">
@@ -235,7 +235,9 @@ export const DrillCard: React.FC = () => {
               </div>
 
               {/* Radial Countdown Ring (120s / 2 Minutes) */}
-              <DrillCountdown timeLeft={timeLeft} totalTime={totalLimit} />
+              <div className="shrink-0">
+                <DrillCountdown timeLeft={timeLeft} totalTime={totalLimit} />
+              </div>
             </div>
 
             {/* Stimulus Image if provided (e.g. Boston Cookie Theft) */}
@@ -285,15 +287,15 @@ export const DrillCard: React.FC = () => {
             )}
 
             {/* Bottom Actions */}
-            <div className="flex items-center justify-between pt-2">
-              <span className="text-xs text-stone-400">
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-2">
+              <span className="text-xs text-stone-400 text-center sm:text-left">
                 2-minute timed response. Answers are required to calibrate accurately.
               </span>
 
               <button
                 onClick={handleNextClick}
                 disabled={isSubmitting}
-                className="px-6 py-3 rounded-xl bg-ink-primary hover:bg-stone-800 disabled:bg-stone-300 text-white font-medium text-sm flex items-center space-x-2 shadow-sm transition-all cursor-pointer"
+                className="w-full sm:w-auto px-6 py-3 rounded-xl bg-ink-primary hover:bg-stone-800 disabled:bg-stone-300 text-white font-medium text-sm flex items-center justify-center space-x-2 shadow-sm transition-all cursor-pointer"
               >
                 {isSubmitting ? (
                   <>

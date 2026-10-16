@@ -33,42 +33,42 @@ export const TopBar: React.FC = () => {
   const isOverLimit = wordCount > 1000;
 
   return (
-    <div className="flex flex-wrap items-center justify-between gap-4 p-4 bg-surface border-b border-surface-border">
-      {/* Left: Input Mode Segmented Control */}
-      <div className="flex items-center space-x-2">
-        <div className="flex items-center p-1 bg-surface-subtle rounded-xl border border-stone-200/60">
+    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 sm:p-4 bg-surface border-b border-surface-border">
+      {/* Left: Input Mode Segmented Control & Context Selector */}
+      <div className="flex items-center space-x-2 overflow-x-auto pb-1 sm:pb-0 max-w-full">
+        <div className="flex items-center p-1 bg-surface-subtle rounded-xl border border-stone-200/60 shrink-0">
           <button
             onClick={() => setInputType('raw_draft')}
-            className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+            className={`flex items-center space-x-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg text-xs font-semibold transition-all shrink-0 ${
               inputType === 'raw_draft'
                 ? 'bg-surface text-ink-primary shadow-xs'
                 : 'text-ink-secondary hover:text-ink-primary'
             }`}
           >
             <FileText className="w-3.5 h-3.5" />
-            <span>Paste Existing Draft</span>
+            <span><span className="hidden sm:inline">Paste Existing </span>Draft</span>
           </button>
 
           <button
             onClick={() => setInputType('bullet_points')}
-            className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+            className={`flex items-center space-x-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg text-xs font-semibold transition-all shrink-0 ${
               inputType === 'bullet_points'
                 ? 'bg-surface text-ink-primary shadow-xs'
                 : 'text-ink-secondary hover:text-ink-primary'
             }`}
           >
             <ListOrdered className="w-3.5 h-3.5" />
-            <span>Draft from Bullets</span>
+            <span><span className="hidden sm:inline">Draft from </span>Bullets</span>
           </button>
         </div>
 
         {/* Context Selector Pills */}
-        <div className="hidden sm:flex items-center space-x-1.5 pl-2 border-l border-stone-200">
+        <div className="flex items-center space-x-1.5 pl-2 border-l border-stone-200 shrink-0">
           {CONTEXT_OPTIONS.map((opt) => (
             <button
               key={opt.id}
               onClick={() => setContext(opt.id)}
-              className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
+              className={`px-2.5 sm:px-3 py-1.5 rounded-full text-xs font-medium transition-all shrink-0 ${
                 context === opt.id
                   ? 'bg-amber-100 text-amber-900 border border-amber-300 font-semibold'
                   : 'bg-surface-subtle text-ink-secondary hover:text-ink-primary border border-transparent'
@@ -82,7 +82,7 @@ export const TopBar: React.FC = () => {
       </div>
 
       {/* Right: Word Limit Meter & Transform CTA */}
-      <div className="flex items-center space-x-4">
+      <div className="flex items-center justify-between sm:justify-end space-x-3 sm:space-x-4">
         {/* 1,000-Word Pass Limit Counter */}
         <div className="flex items-center space-x-1.5 text-xs font-mono">
           <span

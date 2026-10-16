@@ -45,14 +45,16 @@ def _format_user_response(user_doc: Dict[str, Any]) -> UserResponse:
         hour=0, minute=0, second=0, microsecond=0
     )
     user_id = str(user_doc.get("_id", ""))
+    tier = UserTier(user_doc.get("tier", "free"))
+    limit = 999999 if tier == UserTier.PRO else getattr(settings, "FREE_TIER_DAILY_WORD_LIMIT", 1500)
     return UserResponse(
         id=user_id,
         firebaseUid=user_doc.get("firebaseUid"),
         email=user_doc.get("email", ""),
         displayName=user_doc.get("displayName") or user_doc.get("full_name"),
-        tier=UserTier(user_doc.get("tier", "free")),
+        tier=tier,
         wordsUsedThisWeek=user_doc.get("wordsUsedThisWeek", user_doc.get("words_used_this_week", 0)),
-        weeklyWordLimit=user_doc.get("weeklyWordLimit", 2500),
+        weeklyWordLimit=limit,
         lastWeekReset=user_doc.get("lastWeekReset", start_of_week),
         streakDays=user_doc.get("streakDays", 1),
         is_active=user_doc.get("is_active", True),

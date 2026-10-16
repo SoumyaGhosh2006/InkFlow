@@ -8,13 +8,13 @@
  */
 
 import React from 'react';
-import { Crown, Sparkles, CheckCircle2, LogIn, LogOut } from 'lucide-react';
+import { Crown, Sparkles, CheckCircle2, LogIn, LogOut, Flame } from 'lucide-react';
 import { useAuthStore } from '../../store/useAuthStore';
 import { useStudioStore } from '../../store/useStudioStore';
 
 export const AppHeader: React.FC = () => {
   const { user, loginWithGoogle, logout, isLoading } = useAuthStore();
-  const { activeView, setActiveView, setPricingModalOpen } = useStudioStore();
+  const { activeView, setActiveView, setPricingModalOpen, setStatsDrawerOpen } = useStudioStore();
 
   const getTitle = () => {
     switch (activeView) {
@@ -55,11 +55,11 @@ export const AppHeader: React.FC = () => {
   };
 
   return (
-    <header className="h-16 flex-shrink-0 bg-surface border-b border-surface-border px-8 flex items-center justify-between select-none z-10">
+    <header className="h-16 flex-shrink-0 bg-surface border-b border-surface-border px-4 sm:px-6 md:px-8 flex items-center justify-between select-none z-10">
       {/* Brand & Breadcrumb */}
-      <div className="flex items-center space-x-4">
-        <div className="flex items-center space-x-2">
-          <span className="text-xl font-bold tracking-tight text-ink-primary font-serif">
+      <div className="flex items-center space-x-3 sm:space-x-4 min-w-0">
+        <div className="flex items-center space-x-2 flex-shrink-0">
+          <span className="text-lg sm:text-xl font-bold tracking-tight text-ink-primary font-serif">
             InkFlow
           </span>
           <span className="w-1.5 h-1.5 rounded-full bg-accent-primary" />
@@ -67,14 +67,24 @@ export const AppHeader: React.FC = () => {
 
         <span className="text-stone-300 font-light">/</span>
 
-        <h1 className="text-sm font-medium text-ink-secondary">
+        <h1 className="text-xs sm:text-sm font-medium text-ink-secondary truncate">
           {getTitle()}
         </h1>
       </div>
 
       {/* Right Controls & User Info */}
-      <div className="flex items-center space-x-4">
-        {/* Backend Status indicator */}
+      <div className="flex items-center space-x-2 sm:space-x-4 flex-shrink-0">
+        {/* Mobile Stats / Quota Toggle Button */}
+        <button
+          onClick={() => setStatsDrawerOpen(true)}
+          className="flex xl:hidden items-center space-x-1.5 px-2.5 py-1.5 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-200/80 text-xs font-semibold shadow-2xs transition-all cursor-pointer"
+          title="Open Daily Quota & Biometric Genome"
+        >
+          <Flame className="w-3.5 h-3.5 text-accent-primary" />
+          <span className="hidden sm:inline">Daily Quota</span>
+        </button>
+
+        {/* Backend Status indicator (desktop only) */}
         <div className="hidden md:flex items-center space-x-1.5 px-3 py-1 rounded-full bg-surface-subtle border border-surface-border text-xs text-ink-secondary">
           <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
           <span>API Connected (Groq 120B)</span>

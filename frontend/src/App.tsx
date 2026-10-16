@@ -22,7 +22,13 @@ import { useAuthStore } from './store/useAuthStore';
 import { onAuthChange } from './lib/firebase';
 
 export const App: React.FC = () => {
-  const { activeView, setActiveView, setPricingModalOpen } = useStudioStore();
+  const {
+    activeView,
+    setActiveView,
+    setPricingModalOpen,
+    isStatsDrawerOpen,
+    setStatsDrawerOpen,
+  } = useStudioStore();
   const { fetchUser } = useAuthStore();
 
   useEffect(() => {
@@ -75,11 +81,11 @@ export const App: React.FC = () => {
 
   return (
     <div className="flex h-screen w-screen overflow-hidden bg-canvas text-ink-primary font-sans antialiased">
-      {/* 48px Icon-Only Navigation Dock */}
+      {/* 48px Icon-Only Navigation Dock (Desktop) / Bottom Nav Bar (Mobile) */}
       <NavigationDock />
 
       {/* Main Workspace Column */}
-      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+      <div className="flex-1 flex flex-col min-w-0 overflow-hidden pb-16 md:pb-0">
         {/* App Header */}
         <AppHeader />
 
@@ -89,8 +95,24 @@ export const App: React.FC = () => {
         </main>
       </div>
 
-      {/* Right Insights & Stats Sidebar */}
-      <StatsSidebar />
+      {/* Right Insights & Stats Sidebar (Desktop) */}
+      <div className="hidden xl:flex h-full shrink-0">
+        <StatsSidebar />
+      </div>
+
+      {/* Mobile Slide-over Drawer for Stats & Quota (< xl screens) */}
+      {isStatsDrawerOpen && (
+        <div className="fixed inset-0 z-50 xl:hidden flex justify-end">
+          <div
+            className="fixed inset-0 bg-black/60 backdrop-blur-xs transition-opacity"
+            onClick={() => setStatsDrawerOpen(false)}
+            aria-label="Close stats drawer overlay"
+          />
+          <div className="relative w-80 max-w-[85vw] h-full bg-surface shadow-2xl z-10 flex flex-col animate-in slide-in-from-right duration-200">
+            <StatsSidebar />
+          </div>
+        </div>
+      )}
 
       {/* Global Pro Upgrade Modal */}
       <UpgradeModal />

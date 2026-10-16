@@ -48,7 +48,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
             photoUrl: res.user.photoURL || undefined,
             tier: 'free',
             wordsUsedThisWeek: 0,
-            weeklyWordLimit: 2500,
+            weeklyWordLimit: 1500,
             lastWeekReset: new Date().toISOString(),
             streakDays: 1,
             is_active: true,

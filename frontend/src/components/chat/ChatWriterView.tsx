@@ -167,12 +167,12 @@ export const ChatWriterView: React.FC = () => {
   return (
     <div className="flex-1 flex flex-col h-full bg-surface select-text overflow-hidden">
       {/* Top Bar with Context Starters */}
-      <div className="p-4 bg-surface border-b border-surface-border flex flex-wrap items-center justify-between gap-3">
-        <div className="flex items-center space-x-2">
-          <span className="text-xs font-semibold text-ink-secondary uppercase tracking-wider">
+      <div className="p-3 sm:p-4 bg-surface border-b border-surface-border flex items-center justify-between gap-3">
+        <div className="flex items-center space-x-2 overflow-x-auto max-w-full pb-1 sm:pb-0">
+          <span className="text-xs font-semibold text-ink-secondary uppercase tracking-wider shrink-0 hidden sm:inline">
             Quick Starters:
           </span>
-          <div className="flex flex-wrap items-center gap-1.5">
+          <div className="flex items-center gap-1.5 shrink-0">
             {QUICK_PROMPTS.map((qp) => {
               const Icon = qp.icon;
               return (
@@ -183,7 +183,7 @@ export const ChatWriterView: React.FC = () => {
                     setSelectedContext(qp.context);
                     textareaRef.current?.focus();
                   }}
-                  className="flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-surface-subtle hover:bg-stone-200/70 border border-surface-border text-xs text-ink-primary font-medium transition-all"
+                  className="flex items-center space-x-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl bg-surface-subtle hover:bg-stone-200/70 border border-surface-border text-xs text-ink-primary font-medium transition-all shrink-0"
                 >
                   <Icon className="w-3.5 h-3.5 text-accent-primary" />
                   <span>{qp.label}</span>
@@ -372,7 +372,7 @@ export const ChatWriterView: React.FC = () => {
           </div>
 
           <div className="flex items-center justify-between text-[11px] text-stone-400 px-1">
-            <span>Press <kbd className="px-1 py-0.5 bg-stone-100 border border-stone-300 rounded font-mono text-[10px]">Enter</kbd> to send, <kbd className="px-1 py-0.5 bg-stone-100 border border-stone-300 rounded font-mono text-[10px]">Shift+Enter</kbd> for new line</span>
+            <span className="hidden sm:inline">Press <kbd className="px-1 py-0.5 bg-stone-100 border border-stone-300 rounded font-mono text-[10px]">Enter</kbd> to send, <kbd className="px-1 py-0.5 bg-stone-100 border border-stone-300 rounded font-mono text-[10px]">Shift+Enter</kbd> for new line</span>
             <span>Resets Daily (00:00 UTC)</span>
           </div>
         </div>
