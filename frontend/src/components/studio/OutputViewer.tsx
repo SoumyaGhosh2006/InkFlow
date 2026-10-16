@@ -15,6 +15,7 @@ import { GitCompare, Sparkles, Loader2, Check } from 'lucide-react';
 import { useStudioStore } from '../../store/useStudioStore';
 import { CharacterDiff } from './CharacterDiff';
 import { MeaningAlert } from './MeaningAlert';
+import { MarkdownView } from '../common/MarkdownView';
 
 export const OutputViewer: React.FC = () => {
   const {
@@ -156,10 +157,10 @@ export const OutputViewer: React.FC = () => {
             ) : (
               <div
                 onClick={() => setIsEditing(true)}
-                className="p-5 rounded-2xl bg-canvas border border-surface-border font-sans text-base leading-relaxed text-ink-primary select-text cursor-text min-h-[220px]"
+                className="p-5 rounded-2xl bg-canvas border border-surface-border text-ink-primary select-text cursor-text min-h-[220px]"
                 title="Click to edit draft directly"
               >
-                {transformedDraft}
+                <MarkdownView content={transformedDraft} />
               </div>
             )}
           </>

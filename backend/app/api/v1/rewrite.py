@@ -306,27 +306,48 @@ async def chat_compose(
 
     # Style Genome context integration
     exemplars = []
+    genome_details = []
     try:
         genomes_col = get_genomes_collection()
         user_genome = await genomes_col.find_one({"$or": [{"userId": user_id}, {"user_id": user_id}]})
         if user_genome:
             exemplars = user_genome.get("exemplars", [])
-    except Exception:
-        pass
+            baseline = user_genome.get("baselineGenome", {})
+            if baseline:
+                target_len = baseline.get("avgSentenceLength")
+                if target_len:
+                    genome_details.append(f"Target sentence rhythm: ~{target_len:.1f} words per sentence on average.")
+                formality = baseline.get("formalityScore")
+                if formality:
+                    genome_details.append(f"Target formality baseline: {formality:.1f} / 10.0.")
+                transitions = baseline.get("transitionHabits", [])
+                if transitions:
+                    genome_details.append(f"Favored natural transitions: {', '.join(transitions[:4])}.")
+                punc = baseline.get("punctuationHabits", {})
+                if punc:
+                    if punc.get("emDashUsage") in ("moderate", "frequent"):
+                        genome_details.append("Use em-dashes (—) organically for natural pauses.")
+                    if punc.get("parenthesesUsage") in ("moderate", "frequent"):
+                        genome_details.append("Use parentheses for aside thoughts where natural.")
+    except Exception as exc:
+        logger.warning("Could not load user genome for chat: %s", exc)
 
     system_instruction = (
         "You are InkFlow AI Writer, an authentic, high-precision composition assistant.\n"
-        "Draft complete, ready-to-use text (emails, letters, study notes, messages, articles, announcements) directly in natural, human cadence.\n\n"
+        "Draft complete, ready-to-use text (emails, letters, study notes, messages, articles, announcements) directly in the author's personalized natural voice and cadence.\n\n"
         "STRICT COMPOSITION RULES:\n"
-        "1. NEVER use AI cliches or generic slop (e.g. 'delve', 'testament', 'tapestry', 'it is important to note', 'in conclusion', 'beacon', 'moreover', 'pivotal').\n"
+        "1. NEVER use AI cliches or generic slop (e.g. 'delve', 'testament', 'tapestry', 'it is important to note', 'in conclusion', 'beacon', 'moreover', 'pivotal', 'foster').\n"
         "2. Write with organic rhythm, varied sentence lengths, and genuine human pacing.\n"
-        "3. If drafting an email, format complete with a clear 'Subject:' line and polished message body.\n"
-        "4. If drafting notes, use clear readable headings and concise bullet points.\n"
-        "5. If drafting a message/SMS, be concise, direct, and conversational.\n"
-        f"6. Context profile: {payload.context}. Tone guidance: {payload.tone or 'natural and direct'}."
+        "3. FORMATTING: Use clean, structured Markdown with clear headings (`##`), bullet points, and well-formed GitHub-flavored tables (`| Col | Col |`) for comparisons, lists, or structured data.\n"
+        "4. If drafting an email, format complete with a clear 'Subject:' line and polished message body.\n"
+        "5. If drafting notes/study guides, use clear headings, structured tables where helpful, and concise bullet points.\n"
+        "6. If drafting a message/SMS, be concise, direct, and conversational.\n"
+        f"7. Context profile: {payload.context}. Tone guidance: {payload.tone or 'natural and direct'}."
     )
+    if genome_details:
+        system_instruction += "\n\nAUTHOR'S PERSONAL VOICE GENOME BIOMETRICS:\n" + "\n".join(f"- {detail}" for detail in genome_details)
     if exemplars:
-        system_instruction += "\nAuthor's authentic voice exemplars:\n" + "\n".join(f"- {ex}" for ex in exemplars[:2])
+        system_instruction += "\n\nAUTHOR'S AUTHENTIC VOICE EXEMPLARS:\n" + "\n".join(f"- {ex}" for ex in exemplars[:2])
 
     chat_history: List[Dict[str, str]] = [{"role": "system", "content": system_instruction}]
 

@@ -11,10 +11,8 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import {
-  Sparkles,
   Copy,
   Check,
-  ArrowRight,
   Bot,
   User,
   Trash2,
@@ -26,8 +24,8 @@ import {
   CornerDownLeft,
 } from 'lucide-react';
 import { chatApi } from '../../lib/api';
-import { useStudioStore } from '../../store/useStudioStore';
 import { useAuthStore } from '../../store/useAuthStore';
+import { MarkdownView } from '../common/MarkdownView';
 import type { ChatMessage } from '../../types/api';
 
 interface QuickPrompt {
@@ -69,14 +67,13 @@ const QUICK_PROMPTS: QuickPrompt[] = [
 ];
 
 export const ChatWriterView: React.FC = () => {
-  const { transferToHumanize } = useStudioStore();
   const { updateWordsUsed } = useAuthStore();
 
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       role: 'assistant',
       content:
-        '👋 Welcome to the **InkFlow AI Writer**!\n\nTell me what you need to write — whether it’s an **email** with specific recipient and sender details, **lecture notes**, a **formal letter**, an **SMS**, or a **full paragraph**.\n\nI’ll generate it cleanly without generic AI slop. When you’re satisfied, click **"Send to Humanize"** to fine-tune it in your personal voice.',
+        '👋 Welcome to the **InkFlow AI Writer**!\n\nTell me what you need to write — whether it’s an **email** with specific recipient and sender details, **lecture notes**, a **formal letter**, an **SMS**, or a **full paragraph**.\n\nEvery draft is generated cleanly without generic AI slop, calibrated directly with your personal voice accent and cadence.',
     },
   ]);
 
@@ -242,9 +239,13 @@ export const ChatWriterView: React.FC = () => {
                   }`}
                 >
                   {/* Message Content */}
-                  <div className="whitespace-pre-wrap leading-relaxed text-sm font-sans">
-                    {msg.content}
-                  </div>
+                  {isUser ? (
+                    <div className="whitespace-pre-wrap leading-relaxed text-sm font-sans text-stone-100">
+                      {msg.content}
+                    </div>
+                  ) : (
+                    <MarkdownView content={msg.content} />
+                  )}
 
                   {/* Actions for Assistant messages (exclude the initial greeting) */}
                   {!isUser && idx > 0 && (
@@ -252,38 +253,29 @@ export const ChatWriterView: React.FC = () => {
                       <div className="flex items-center space-x-2 text-[11px] text-ink-secondary font-mono">
                         <span>{wordCount} words</span>
                         <span>•</span>
-                        <span className="text-emerald-700">Groq 120B</span>
+                        <span className="text-emerald-700 font-medium">Groq 120B</span>
+                        <span>•</span>
+                        <span className="text-amber-700 font-medium">Voice Calibrated</span>
                       </div>
 
                       <div className="flex items-center space-x-2">
                         {/* Copy button */}
                         <button
                           onClick={() => handleCopy(msg.content, idx)}
-                          className="flex items-center space-x-1 px-2.5 py-1 rounded-lg bg-surface border border-surface-border hover:bg-surface-subtle text-xs text-ink-secondary hover:text-ink-primary transition-all"
-                          title="Copy to clipboard"
+                          className="flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-surface border border-surface-border hover:bg-surface-subtle text-xs font-medium text-ink-secondary hover:text-ink-primary shadow-2xs transition-all cursor-pointer"
+                          title="Copy formatted markdown text to clipboard"
                         >
                           {copiedIndex === idx ? (
                             <>
-                              <Check className="w-3 h-3 text-emerald-600" />
-                              <span className="text-emerald-600 font-medium">Copied</span>
+                              <Check className="w-3.5 h-3.5 text-emerald-600" />
+                              <span className="text-emerald-600 font-semibold">Copied!</span>
                             </>
                           ) : (
                             <>
-                              <Copy className="w-3 h-3" />
-                              <span>Copy</span>
+                              <Copy className="w-3.5 h-3.5" />
+                              <span>Copy Text</span>
                             </>
                           )}
-                        </button>
-
-                        {/* Direct Bridge to Humanize Studio */}
-                        <button
-                          onClick={() => transferToHumanize(msg.content)}
-                          className="flex items-center space-x-1.5 px-3 py-1 rounded-lg bg-accent-primary hover:bg-accent-hover text-stone-900 text-xs font-semibold shadow-xs transition-all cursor-pointer"
-                          title="Transfer this draft into Humanize Studio to fine-tune with your voice genome"
-                        >
-                          <Sparkles className="w-3.5 h-3.5" />
-                          <span>Send to Humanize</span>
-                          <ArrowRight className="w-3 h-3 ml-0.5" />
                         </button>
                       </div>
                     </div>
