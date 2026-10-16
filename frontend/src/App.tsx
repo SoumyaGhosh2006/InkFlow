@@ -42,6 +42,9 @@ export const App: React.FC = () => {
         } catch (e) {
           console.warn('Failed to refresh Firebase token:', e);
         }
+      } else {
+        localStorage.removeItem('inkflow_token');
+        useAuthStore.setState({ user: null, isLoading: false });
       }
     });
 

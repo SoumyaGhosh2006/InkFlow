@@ -109,23 +109,32 @@ export const SourceEditor: React.FC = () => {
           className="w-full flex-1 bg-transparent text-base font-normal leading-relaxed text-ink-primary focus:outline-none resize-none placeholder:text-stone-400 font-sans"
         />
 
-        {/* Slop Highlights Chips Bar */}
+        {/* Slop Highlights: Compact on Mobile, Full Badges on Desktop */}
         {detectedSlopWords.length > 0 && (
-          <div className="mt-4 pt-3 border-t border-stone-200/60">
-            <span className="text-[11px] font-semibold text-stone-500 uppercase tracking-wider block mb-1.5">
-              Detected Synthetic Patterns:
-            </span>
-            <div className="flex flex-wrap gap-1.5">
-              {detectedSlopWords.map((word, idx) => (
-                <span
-                  key={idx}
-                  className="px-2.5 py-1 rounded-lg bg-amber-50 border border-amber-300 text-amber-900 text-xs font-mono font-medium line-through decoration-amber-500 decoration-1"
-                >
-                  "{word}"
-                </span>
-              ))}
+          <>
+            {/* Mobile Compact Alert Strip */}
+            <div className="mt-2 pt-2 border-t border-stone-200/60 flex sm:hidden items-center justify-between text-xs text-amber-900 bg-amber-50/70 px-3 py-1.5 rounded-xl border border-amber-200/80 shrink-0">
+              <span className="font-semibold">⚠️ {detectedSlopWords.length} AI slop phrases detected</span>
+              <span className="text-[10px] text-stone-500 font-sans">Auto-purged on Humanize</span>
             </div>
-          </div>
+
+            {/* Desktop Full Pattern Chips */}
+            <div className="mt-4 pt-3 border-t border-stone-200/60 hidden sm:block">
+              <span className="text-[11px] font-semibold text-stone-500 uppercase tracking-wider block mb-1.5">
+                Detected Synthetic Patterns:
+              </span>
+              <div className="flex flex-wrap gap-1.5">
+                {detectedSlopWords.map((word, idx) => (
+                  <span
+                    key={idx}
+                    className="px-2.5 py-1 rounded-lg bg-amber-50 border border-amber-300 text-amber-900 text-xs font-mono font-medium line-through decoration-amber-500 decoration-1"
+                  >
+                    "{word}"
+                  </span>
+                ))}
+              </div>
+            </div>
+          </>
         )}
       </div>
     </div>

@@ -25,12 +25,17 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   error: null,
 
   fetchUser: async () => {
+    const token = localStorage.getItem('inkflow_token');
+    if (!token) {
+      set({ user: null, isLoading: false });
+      return;
+    }
     set({ isLoading: true, error: null });
     try {
       const user = await authApi.getMe();
       set({ user, isLoading: false });
     } catch (err: any) {
-      set({ error: err.message, isLoading: false });
+      set({ user: null, error: err.message, isLoading: false });
     }
   },
 
@@ -70,6 +75,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   },
 
   logout: async () => {
+    localStorage.removeItem('inkflow_token');
     await signOutUser();
     set({ user: null });
   },

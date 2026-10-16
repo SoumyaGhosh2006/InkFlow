@@ -57,6 +57,8 @@ interface StudioState {
   setPricingModalOpen: (open: boolean) => void;
   isStatsDrawerOpen: boolean;
   setStatsDrawerOpen: (open: boolean) => void;
+  mobileStudioTab: 'source' | 'output';
+  setMobileStudioTab: (tab: 'source' | 'output') => void;
 
   // Actions
   triggerTransform: () => Promise<void>;
@@ -117,6 +119,9 @@ export const useStudioStore = create<StudioState>((set, get) => ({
   isStatsDrawerOpen: false,
   setStatsDrawerOpen: (open) => set({ isStatsDrawerOpen: open }),
 
+  mobileStudioTab: 'source',
+  setMobileStudioTab: (tab) => set({ mobileStudioTab: tab }),
+
   triggerTransform: async () => {
     const { inputDraft, inputType, context } = get();
     if (!inputDraft.trim()) return;
@@ -124,6 +129,7 @@ export const useStudioStore = create<StudioState>((set, get) => ({
     set({
       isTransforming: true,
       transformError: null,
+      mobileStudioTab: 'output',
       cyclerStep: 1,
       cyclerMessage: CYCLER_PHASES[0].text,
       meaningCheckFailed: false,
@@ -198,6 +204,7 @@ export const useStudioStore = create<StudioState>((set, get) => ({
       meaningCheckFailed: false,
       meaningWarning: null,
       showDiff: false,
+      mobileStudioTab: 'source',
     });
   },
 
@@ -208,6 +215,7 @@ export const useStudioStore = create<StudioState>((set, get) => ({
       meaningCheckFailed: false,
       meaningWarning: null,
       showDiff: false,
+      mobileStudioTab: 'source',
       activeView: 'studio',
     });
   },

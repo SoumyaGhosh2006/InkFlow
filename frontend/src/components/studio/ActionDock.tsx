@@ -47,12 +47,18 @@ export const ActionDock: React.FC = () => {
   const fidelityScore = evalScores?.semanticFidelityScore || 98.1;
 
   return (
-    <div className="p-4 bg-surface border-t border-surface-border flex flex-wrap items-center justify-between gap-4">
-      {/* Left: Provider & Telemetry Pills */}
-      <div className="flex flex-wrap items-center gap-2">
-        {/* Provider Pill */}
+    <div className="p-3 sm:p-4 bg-surface border-t border-surface-border flex flex-col sm:flex-row items-center justify-between gap-3 shrink-0">
+      {/* Left: Telemetry Pills */}
+      <div className="flex items-center space-x-2 overflow-x-auto max-w-full w-full sm:w-auto pb-1 sm:pb-0">
+        {/* Slop Eradication Score Pill (Always visible) */}
+        <div className="flex items-center space-x-1.5 px-3 py-1 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200 text-xs font-medium shrink-0">
+          <Sparkles className="w-3.5 h-3.5 text-emerald-600" />
+          <span>Slop Purged: {Math.round(slopScore)}%</span>
+        </div>
+
+        {/* Provider & Fidelity pills on sm+ */}
         <div
-          className={`flex items-center space-x-1.5 px-3 py-1 rounded-full text-xs font-mono font-medium border ${
+          className={`hidden sm:flex items-center space-x-1.5 px-3 py-1 rounded-full text-xs font-mono font-medium border shrink-0 ${
             isBackup
               ? 'bg-amber-50 text-amber-900 border-amber-300'
               : 'bg-surface-subtle text-ink-primary border-surface-border'
@@ -63,15 +69,8 @@ export const ActionDock: React.FC = () => {
           <span>{providerLabel}</span>
         </div>
 
-        {/* Slop Eradication Score Pill */}
-        <div className="flex items-center space-x-1.5 px-3 py-1 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200 text-xs font-medium">
-          <Sparkles className="w-3.5 h-3.5 text-emerald-600" />
-          <span>Slop Purged: {Math.round(slopScore)}%</span>
-        </div>
-
-        {/* Semantic Fidelity Score Pill */}
         <div
-          className={`flex items-center space-x-1.5 px-3 py-1 rounded-full text-xs font-medium border ${
+          className={`hidden sm:flex items-center space-x-1.5 px-3 py-1 rounded-full text-xs font-medium border shrink-0 ${
             meaningCheckFailed
               ? 'bg-amber-100 text-amber-900 border-amber-300'
               : 'bg-surface-subtle text-ink-primary border-surface-border'
@@ -83,12 +82,12 @@ export const ActionDock: React.FC = () => {
       </div>
 
       {/* Right: Actions */}
-      <div className="flex items-center space-x-3">
+      <div className="flex items-center space-x-2 sm:space-x-3 w-full sm:w-auto justify-end">
         {/* Copy Button */}
         <button
           onClick={handleCopy}
           disabled={!transformedDraft}
-          className="px-4 py-2 rounded-xl bg-surface-subtle hover:bg-stone-200 disabled:opacity-40 disabled:cursor-not-allowed text-ink-primary text-xs font-semibold flex items-center space-x-1.5 border border-stone-200 transition-colors"
+          className="flex-1 sm:flex-initial px-4 py-2 rounded-xl bg-surface-subtle hover:bg-stone-200 disabled:opacity-40 disabled:cursor-not-allowed text-ink-primary text-xs font-semibold flex items-center justify-center space-x-1.5 border border-stone-200 transition-colors cursor-pointer"
         >
           {copied ? (
             <>
@@ -104,11 +103,11 @@ export const ActionDock: React.FC = () => {
         </button>
 
         {/* Accept & Learn Button */}
-        <div className="relative group">
+        <div className="relative group flex-1 sm:flex-initial">
           <button
             onClick={handleAccept}
             disabled={!transformedDraft || meaningCheckFailed}
-            className={`px-4 py-2 rounded-xl text-xs font-semibold flex items-center space-x-1.5 transition-all ${
+            className={`w-full sm:w-auto px-4 py-2 rounded-xl text-xs font-semibold flex items-center justify-center space-x-1.5 transition-all cursor-pointer ${
               meaningCheckFailed
                 ? 'bg-stone-200 text-stone-400 cursor-not-allowed border border-stone-300'
                 : accepted
@@ -119,12 +118,12 @@ export const ActionDock: React.FC = () => {
             {meaningCheckFailed ? (
               <>
                 <Lock className="w-3.5 h-3.5 text-stone-400" />
-                <span>Accept & Learn (Locked)</span>
+                <span>Locked</span>
               </>
             ) : accepted ? (
               <>
                 <Check className="w-3.5 h-3.5 text-white" />
-                <span>Genome Updated</span>
+                <span>Learned</span>
               </>
             ) : (
               <>

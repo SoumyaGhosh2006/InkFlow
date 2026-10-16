@@ -31,9 +31,9 @@ export const apiClient = axios.create({
   timeout: 25000,
 });
 
-// Attach auth token if available, defaulting to verified dev token 'test-token'
+// Attach auth token only when an authenticated session exists in localStorage
 apiClient.interceptors.request.use((config) => {
-  const token = localStorage.getItem('inkflow_token') || 'test-token';
+  const token = localStorage.getItem('inkflow_token');
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
@@ -105,20 +105,22 @@ const FALLBACK_GENOME: StyleGenomeResponse = {
 // Authentication Endpoints
 // -----------------------------------------------------------------------------
 export const authApi = {
-  async sync(fbUser?: { uid?: string; email?: string | null; displayName?: string | null; photoUrl?: string }): Promise<UserProfile> {
+  async sync(fbUser?: { uid?: string; email?: string | null; displayName?: string | null; photoUrl?: string }): Promise<UserProfile | null> {
+    const token = localStorage.getItem('inkflow_token');
+    if (!token && !fbUser?.uid) return null;
     try {
       const response = await apiClient.post<UserProfile>('/auth/sync');
       return response.data;
     } catch (err) {
-      console.warn('Backend /auth/sync unavailable, using local session state:', err);
+      if (!fbUser?.uid && !auth?.currentUser?.uid) return null;
       const current = auth?.currentUser;
       return {
-        id: fbUser?.uid || current?.uid || 'usr_local_dev',
-        email: fbUser?.email || current?.email || 'author@inkflow.tech',
+        id: fbUser?.uid || current?.uid || '',
+        email: fbUser?.email || current?.email || '',
         displayName:
           fbUser?.displayName ||
           current?.displayName ||
-          (current?.email ? current.email.split('@')[0] : 'InkFlow Author'),
+          (current?.email ? current.email.split('@')[0] : 'Author'),
         photoUrl: fbUser?.photoUrl || current?.photoURL || undefined,
         tier: 'free',
         wordsUsedThisWeek: 0,
@@ -130,12 +132,17 @@ export const authApi = {
     }
   },
 
-  async getMe(): Promise<UserProfile> {
+  async getMe(): Promise<UserProfile | null> {
+    const token = localStorage.getItem('inkflow_token');
+    if (!token) {
+      return null;
+    }
     try {
       const response = await apiClient.get<UserProfile>('/auth/me');
       return response.data;
     } catch (err) {
-      return this.sync();
+      localStorage.removeItem('inkflow_token');
+      return null;
     }
   },
 };

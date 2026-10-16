@@ -59,8 +59,10 @@ def verify_firebase_or_jwt_token(token: str) -> Optional[Dict[str, Any]]:
     except JWTError:
         pass
 
-    # 2. Check for test/mock token formats in dev/test environments
-    if token.startswith("test_") or token.startswith("mock_") or token == "test-token":
+    # 2. Check for test/mock token formats in local dev and pytest only
+    if (settings.DEBUG or settings.ENVIRONMENT != "production") and (
+        token.startswith("test_") or token.startswith("mock_") or token == "test-token"
+    ):
         return {
             "uid": token,
             "sub": token,
