@@ -126,6 +126,19 @@ async def llm_provider_error_handler(request: Request, exc: LLMProviderError) ->
 app.include_router(api_v1_router, prefix=settings.API_V1_STR)
 
 
+@app.get("/", tags=["Root"], summary="Root service status")
+async def root_ping() -> dict:
+    """
+    Root ping endpoint for load balancer health checks.
+    """
+    return {
+        "status": "online",
+        "service": "InkFlow API",
+        "health": "/health",
+        "version": "1.0.0",
+    }
+
+
 @app.get("/health", tags=["Health"], summary="Service health check")
 async def health_check() -> dict:
     """
