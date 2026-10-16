@@ -26,9 +26,11 @@ export const UpgradeModal: React.FC = () => {
   const { user, setUserTier, loginWithGoogle } = useAuthStore();
   const [isProcessing, setIsProcessing] = useState(false);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const handleClose = React.useCallback(() => {
     setPricingModalOpen(false);
+    setErrorMessage(null);
     if (activeView === 'pricing') {
       setActiveView('studio');
     }
@@ -55,6 +57,7 @@ export const UpgradeModal: React.FC = () => {
   const handleLaunchCheckout = async () => {
     setIsProcessing(true);
     setSuccessMessage(null);
+    setErrorMessage(null);
 
     // If user is not logged in, trigger Google Sign-In first
     if (isAnonymous) {
@@ -69,83 +72,92 @@ export const UpgradeModal: React.FC = () => {
           setIsProcessing(false);
           return;
         }
-      } catch (err) {
+      } catch (err: any) {
+        setErrorMessage(err.message || 'Please sign in with Google to complete your Pro upgrade.');
         setIsProcessing(false);
         return;
       }
     }
 
     try {
-      // 1. Create order on backend
-      const order = await paymentsApi.createOrder('pro_monthly');
-
-      // 2. If Razorpay JS SDK is loaded in window
-      if (typeof window.Razorpay === 'function') {
-        const activeUser = useAuthStore.getState().user;
-        const options: any = {
-          key: order.key_id || 'rzp_test_inkflow',
-          amount: order.amount,
-          currency: order.currency || 'INR',
-          name: 'InkFlow Pro',
-          description: 'Unlimited Adaptive Rewrites & Multi-Context Genomes',
-          handler: async (response: any) => {
-            try {
-              await paymentsApi.verify({
-                razorpay_order_id: response.razorpay_order_id || order.order_id,
-                razorpay_payment_id: response.razorpay_payment_id || `pay_${Date.now()}`,
-                razorpay_signature: response.razorpay_signature || 'demo_signature',
-              });
-
-              setUserTier('pro');
-              setSuccessMessage('Welcome to InkFlow Pro! Your account has been upgraded.');
-              confetti({ particleCount: 90, spread: 70, origin: { y: 0.6 } });
-            } catch (err: any) {
-              console.error('Payment verification failed:', err);
-              alert('Payment verification failed on server.');
-            } finally {
-              setIsProcessing(false);
-            }
-          },
-          prefill: {
-            name: activeUser?.displayName || 'InkFlow Author',
-            email: activeUser?.email || 'author@inkflow.tech',
-          },
-          theme: {
-            color: '#F59E0B',
-          },
-          modal: {
-            ondismiss: () => {
-              setIsProcessing(false);
-            },
-          },
-        };
-
-        if (order.order_id && !order.order_id.includes('_usr_') && !order.order_id.includes('demo')) {
-          options.order_id = order.order_id;
-        }
-
-        const rzpInstance = new window.Razorpay(options);
-        rzpInstance.on('payment.failed', (response: any) => {
-          console.error('Razorpay payment failed:', response.error);
-          setIsProcessing(false);
+      // 1. Ensure Razorpay checkout.js SDK is ready
+      if (typeof window.Razorpay !== 'function') {
+        await new Promise<void>((resolve, reject) => {
+          const script = document.createElement('script');
+          script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+          script.async = true;
+          script.onload = () => resolve();
+          script.onerror = () => reject(new Error('Failed to load Razorpay checkout script.'));
+          document.body.appendChild(script);
         });
-        rzpInstance.open();
-      } else {
-        // Fallback for sandboxed preview if external checkout.js is blocked
-        console.info('Simulating sandbox verification...');
-        await paymentsApi.verify({
-          razorpay_order_id: order.order_id,
-          razorpay_payment_id: `pay_mock_${Date.now()}`,
-          razorpay_signature: 'mock_signature',
-        });
-        setUserTier('pro');
-        setSuccessMessage('Upgraded to Pro in test sandbox mode!');
-        confetti({ particleCount: 90, spread: 70, origin: { y: 0.6 } });
-        setIsProcessing(false);
       }
+
+      // 2. Create order on backend (amount in paise, min 100 paise)
+      const order = await paymentsApi.createOrder('pro_monthly', 49900, 'INR');
+
+      const activeUser = useAuthStore.getState().user;
+      const keyId =
+        import.meta.env.VITE_RAZORPAY_KEY_ID ||
+        order.key_id ||
+        'rzp_test_Tocc9I7thX67O1';
+
+      const options: any = {
+        key: keyId,
+        amount: order.amount,
+        currency: order.currency || 'INR',
+        name: 'InkFlow Pro',
+        description: 'Unlimited Adaptive Rewrites & Multi-Context Genomes',
+        handler: async (response: any) => {
+          try {
+            await paymentsApi.verify({
+              razorpay_order_id: response.razorpay_order_id || order.order_id,
+              razorpay_payment_id: response.razorpay_payment_id || `pay_${Date.now()}`,
+              razorpay_signature: response.razorpay_signature || '',
+            });
+
+            setUserTier('pro');
+            setSuccessMessage('Welcome to InkFlow Pro! Your account has been upgraded.');
+            confetti({ particleCount: 90, spread: 70, origin: { y: 0.6 } });
+          } catch (err: any) {
+            console.error('Payment verification failed:', err);
+            setErrorMessage(err.message || 'Payment signature verification failed.');
+          } finally {
+            setIsProcessing(false);
+          }
+        },
+        prefill: {
+          name: activeUser?.displayName || 'InkFlow Author',
+          email: activeUser?.email || 'author@inkflow.tech',
+        },
+        theme: {
+          color: '#F59E0B',
+        },
+        modal: {
+          ondismiss: () => {
+            console.info('Razorpay checkout modal closed by user.');
+            setIsProcessing(false);
+          },
+        },
+      };
+
+      if (order.order_id && !order.order_id.includes('_usr_') && !order.order_id.includes('demo')) {
+        options.order_id = order.order_id;
+      }
+
+      const rzpInstance = new window.Razorpay(options);
+      rzpInstance.on('payment.failed', (response: any) => {
+        console.error('Razorpay payment failed:', response.error);
+        setErrorMessage(
+          response.error?.description ||
+          response.error?.reason ||
+          'Payment failed. Please try a different card, UPI ID, or netbanking.'
+        );
+        setIsProcessing(false);
+      });
+      rzpInstance.open();
     } catch (err: any) {
       console.error('Checkout error:', err);
-      alert(`Checkout failed: ${err.message || 'Check backend connection'}`);
+      setErrorMessage(err.message || 'Checkout failed. Please check your connection and try again.');
       setIsProcessing(false);
     }
   };
@@ -183,9 +195,17 @@ export const UpgradeModal: React.FC = () => {
 
         {/* Success Alert */}
         {successMessage && (
-          <div className="p-3.5 rounded-xl bg-emerald-50 border border-emerald-300 text-emerald-900 text-xs font-medium flex items-center space-x-2">
+          <div className="p-3.5 rounded-xl bg-emerald-50 border border-emerald-300 text-emerald-900 text-xs font-medium flex items-center space-x-2 animate-in fade-in">
             <Check className="w-4 h-4 text-emerald-600 flex-shrink-0" />
             <span>{successMessage}</span>
+          </div>
+        )}
+
+        {/* Error Alert */}
+        {errorMessage && (
+          <div className="p-3.5 rounded-xl bg-red-50 border border-red-300 text-red-900 text-xs font-medium flex items-center space-x-2 animate-in fade-in">
+            <X className="w-4 h-4 text-red-600 flex-shrink-0" />
+            <span>{errorMessage}</span>
           </div>
         )}
 

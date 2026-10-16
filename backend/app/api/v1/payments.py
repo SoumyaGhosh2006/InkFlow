@@ -37,13 +37,15 @@ router = APIRouter()
 class CreateOrderRequest(BaseModel):
     """Payload to initiate a Pro tier subscription checkout."""
     plan: str = Field(default="pro_monthly", description="Subscription plan identifier.")
+    amount: Optional[int] = Field(default=49900, description="Amount in paise (min 100 paise).")
+    currency: Optional[str] = Field(default="INR", description="Payment currency ISO code.")
 
 
 class PaymentVerificationRequest(BaseModel):
     """Payload submitted from frontend checkout to confirm payment success."""
-    razorpay_order_id: str
-    razorpay_payment_id: str
-    razorpay_signature: str
+    razorpay_order_id: str = Field(..., description="Razorpay order ID.")
+    razorpay_payment_id: str = Field(..., description="Razorpay payment ID.")
+    razorpay_signature: str = Field(..., description="HMAC-SHA256 signature from Razorpay.")
 
 
 @router.post(
@@ -57,8 +59,14 @@ async def create_order(
     """
     POST /api/v1/payments/create-order:
     Creates a Razorpay order for Pro upgrade (supports UPI, cards, netbanking).
-    Contract defined in docs/backend.md Section 8.
     """
+    amount_cents = payload.amount if payload.amount is not None else 49900
+    if amount_cents < 100:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Minimum order amount is 100 paise (₹1).",
+        )
+
     user_id = str(current_user.get("_id", current_user.get("userId", "")))
     if current_user.get("tier") == UserTier.PRO.value:
         return {
@@ -67,12 +75,21 @@ async def create_order(
             "tier": "pro",
         }
 
-    return await payment_service.create_order(
-        user_id=user_id,
-        amount_cents=49900,
-        currency="INR",
-        plan=payload.plan,
-    )
+    try:
+        return await payment_service.create_order(
+            user_id=user_id,
+            amount_cents=amount_cents,
+            currency=payload.currency or "INR",
+            plan=payload.plan,
+        )
+    except ValueError as val_err:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(val_err))
+    except Exception as exc:
+        logger.error("Failed to generate Razorpay order: %s", exc)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Payment processor error creating order. Please try again.",
+        )
 
 
 @router.post("/upgrade", summary="Alias for /create-order", include_in_schema=False)
@@ -88,15 +105,25 @@ async def upgrade_user(
     "/verify",
     summary="Validate Razorpay payment signature and upgrade user tier to pro",
 )
+@router.post(
+    "/verify-payment",
+    summary="Validate Razorpay payment signature (standard alias)",
+    include_in_schema=False,
+)
 async def verify_payment(
     payload: PaymentVerificationRequest,
     current_user: Dict[str, Any] = Depends(get_current_user),
 ) -> Dict[str, Any]:
     """
-    POST /api/v1/payments/verify:
+    POST /api/v1/payments/verify or /verify-payment:
     Validates Razorpay payment signature and upgrades user tier to pro.
-    Contract defined in docs/backend.md Section 8.
     """
+    if not payload.razorpay_order_id or not payload.razorpay_payment_id or not payload.razorpay_signature:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Missing required payment verification fields.",
+        )
+
     user_id = str(current_user.get("_id", current_user.get("userId", "")))
     user_email = current_user.get("email")
 
@@ -109,7 +136,7 @@ async def verify_payment(
     if not is_valid:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Invalid payment signature verification.",
+            detail="Invalid payment signature verification. Signatures do not match.",
         )
 
     try:

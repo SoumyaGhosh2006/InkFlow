@@ -123,7 +123,10 @@ async def llm_provider_error_handler(request: Request, exc: LLMProviderError) ->
 # ------------------------------------------------------------------------------
 # Route Registration
 # ------------------------------------------------------------------------------
+from app.api.v1.payments import router as payments_router
+
 app.include_router(api_v1_router, prefix=settings.API_V1_STR)
+app.include_router(payments_router, prefix="/api", tags=["Payments (Standard Alias)"])
 
 
 @app.get("/", tags=["Root"], summary="Root service status")

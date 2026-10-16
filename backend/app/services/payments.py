@@ -40,13 +40,43 @@ class PaymentService:
         plan: str = "pro_monthly",
     ) -> Dict[str, Any]:
         """
-        Creates a genuine Razorpay order via Razorpay Orders API.
-        Contract defined in docs/backend.md Section 8.
+        Creates a genuine Razorpay order via Razorpay Orders API / SDK.
+        Contract defined in docs/backend.md Section 8 and Razorpay standard checkout.
         """
+        if amount_cents < 100:
+            raise ValueError("Minimum order amount is 100 paise (₹1).")
+
         timestamp = int(datetime.now(timezone.utc).timestamp())
         receipt = f"rcpt_{user_id[:8]}_{timestamp}"
 
         if settings.RAZORPAY_KEY_ID and settings.RAZORPAY_KEY_SECRET:
+            # 1. Try official Razorpay Python SDK first
+            try:
+                import razorpay
+                client = razorpay.Client(auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_SECRET))
+                order_data = client.order.create(
+                    data={
+                        "amount": amount_cents,
+                        "currency": currency,
+                        "receipt": receipt,
+                        "notes": {
+                            "user_id": user_id,
+                            "plan": plan,
+                        },
+                    }
+                )
+                logger.info("Successfully generated Razorpay order via SDK: %s", order_data.get("id"))
+                return {
+                    "order_id": order_data.get("id"),
+                    "amount": order_data.get("amount", amount_cents),
+                    "currency": order_data.get("currency", currency),
+                    "key_id": settings.RAZORPAY_KEY_ID,
+                    "plan": plan,
+                }
+            except Exception as sdk_err:
+                logger.warning("Razorpay SDK create failed (%s); trying direct HTTP request: %s", type(sdk_err).__name__, sdk_err)
+
+            # 2. Resilient fallback to direct HTTP API
             try:
                 async with httpx.AsyncClient(timeout=10.0) as client:
                     resp = await client.post(
@@ -64,7 +94,7 @@ class PaymentService:
                     )
                     if resp.status_code in (200, 201):
                         order_data = resp.json()
-                        logger.info("Successfully generated Razorpay order: %s", order_data.get("id"))
+                        logger.info("Successfully generated Razorpay order via HTTP: %s", order_data.get("id"))
                         return {
                             "order_id": order_data.get("id"),
                             "amount": order_data.get("amount", amount_cents),
@@ -95,12 +125,30 @@ class PaymentService:
         signature: str,
     ) -> bool:
         """
-        Cryptographically validates Razorpay webhook/client signature.
+        Cryptographically validates Razorpay payment signature using HMAC-SHA256(order_id + '|' + payment_id, secret).
         """
+        if not order_id or not payment_id or not signature:
+            logger.warning("Verification rejected: Missing order_id, payment_id, or signature.")
+            return False
+
         if not settings.RAZORPAY_KEY_SECRET:
-            # Dev/test mode allows test signatures
             logger.info("RAZORPAY_KEY_SECRET not set; running in test validation mode.")
             return True
+
+        # Try official SDK signature verification first
+        try:
+            import razorpay
+            client = razorpay.Client(auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_SECRET))
+            client.utility.verify_payment_signature({
+                "razorpay_order_id": order_id,
+                "razorpay_payment_id": payment_id,
+                "razorpay_signature": signature,
+            })
+            logger.info("Razorpay signature verified via SDK for order %s", order_id)
+            return True
+        except Exception:
+            # Fallback to direct HMAC-SHA256 calculation
+            pass
 
         message = f"{order_id}|{payment_id}".encode("utf-8")
         expected_signature = hmac.new(

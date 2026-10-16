@@ -306,21 +306,28 @@ export const analyticsApi = {
 // Payments & Pro Tier Upgrade Endpoints
 // -----------------------------------------------------------------------------
 export const paymentsApi = {
-  async createOrder(plan = 'pro_monthly'): Promise<RazorpayOrderResponse> {
+  async createOrder(plan = 'pro_monthly', amount = 49900, currency = 'INR'): Promise<RazorpayOrderResponse> {
     try {
-      const response = await apiClient.post<RazorpayOrderResponse>('/payments/create-order', { plan });
+      const response = await apiClient.post<RazorpayOrderResponse>('/payments/create-order', {
+        plan,
+        amount,
+        currency,
+      });
       return response.data;
-    } catch (err) {
+    } catch (err: any) {
       try {
-        const alt = await apiClient.post<RazorpayOrderResponse>('/payments/order', { plan });
+        const alt = await apiClient.post<RazorpayOrderResponse>('/create-order', {
+          plan,
+          amount,
+          currency,
+        });
         return alt.data;
-      } catch {
-        return {
-          order_id: '',
-          amount: 49900,
-          currency: 'INR',
-          key_id: 'rzp_test_inkflow_demo',
-        };
+      } catch (fallbackErr: any) {
+        throw new Error(
+          err.response?.data?.detail ||
+          err.message ||
+          'Failed to create Razorpay checkout order. Please try again.'
+        );
       }
     }
   },
@@ -333,12 +340,18 @@ export const paymentsApi = {
     try {
       const response = await apiClient.post('/payments/verify', payload);
       return response.data;
-    } catch (err) {
-      return {
-        status: 'success',
-        message: 'Account upgraded to InkFlow Pro.',
-        tier: 'pro',
-      };
+    } catch (err: any) {
+      try {
+        const alt = await apiClient.post('/payments/verify-payment', payload);
+        return alt.data;
+      } catch (altErr: any) {
+        const message =
+          altErr.response?.data?.detail ||
+          err.response?.data?.detail ||
+          altErr.message ||
+          'Payment signature verification failed.';
+        throw new Error(message);
+      }
     }
   },
 };
