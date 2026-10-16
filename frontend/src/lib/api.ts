@@ -284,9 +284,9 @@ export const paymentsApi = {
         return alt.data;
       } catch {
         return {
-          order_id: `order_${Date.now()}`,
-          amount: 1500,
-          currency: 'USD',
+          order_id: '',
+          amount: 49900,
+          currency: 'INR',
           key_id: 'rzp_test_inkflow_demo',
         };
       }

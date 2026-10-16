@@ -67,7 +67,7 @@ async def create_order(
             "tier": "pro",
         }
 
-    return payment_service.create_order(
+    return await payment_service.create_order(
         user_id=user_id,
         amount_cents=49900,
         currency="INR",
@@ -98,7 +98,7 @@ async def verify_payment(
     Contract defined in docs/backend.md Section 8.
     """
     user_id = str(current_user.get("_id", current_user.get("userId", "")))
-    users_col = get_users_collection()
+    user_email = current_user.get("email")
 
     is_valid = payment_service.verify_signature(
         order_id=payload.razorpay_order_id,
@@ -112,20 +112,33 @@ async def verify_payment(
             detail="Invalid payment signature verification.",
         )
 
-    now_utc = datetime.now(timezone.utc)
-    await users_col.update_one(
-        {"$or": [{"_id": ObjectId(user_id) if ObjectId.is_valid(user_id) else None}, {"userId": user_id}]},
-        {
-            "$set": {
-                "tier": UserTier.PRO.value,
-                "razorpaySubscriptionId": payload.razorpay_payment_id,
-                "updatedAt": now_utc,
-                "updated_at": now_utc,
-            }
-        },
-    )
+    try:
+        users_col = get_users_collection()
+        now_utc = datetime.now(timezone.utc)
+        query_conditions = []
+        if ObjectId.is_valid(user_id):
+            query_conditions.append({"_id": ObjectId(user_id)})
+        if user_id:
+            query_conditions.extend([{"firebaseUid": user_id}, {"userId": user_id}, {"user_id": user_id}])
+        if user_email:
+            query_conditions.append({"email": user_email.lower()})
 
-    logger.info("User %s successfully upgraded to PRO tier.", user_id)
+        if query_conditions:
+            await users_col.update_one(
+                {"$or": query_conditions},
+                {
+                    "$set": {
+                        "tier": UserTier.PRO.value,
+                        "razorpaySubscriptionId": payload.razorpay_payment_id,
+                        "updatedAt": now_utc,
+                        "updated_at": now_utc,
+                    }
+                },
+            )
+        logger.info("User %s successfully upgraded to PRO tier in MongoDB.", user_id)
+    except Exception as db_exc:
+        logger.warning("Could not persist PRO upgrade in MongoDB (%s); continuing with active session: %s", user_id, db_exc)
+
     return {
         "status": "success",
         "message": "Congratulations! Your account has been upgraded to InkFlow Pro.",

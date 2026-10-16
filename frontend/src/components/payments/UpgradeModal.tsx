@@ -82,13 +82,12 @@ export const UpgradeModal: React.FC = () => {
       // 2. If Razorpay JS SDK is loaded in window
       if (typeof window.Razorpay === 'function') {
         const activeUser = useAuthStore.getState().user;
-        const options = {
+        const options: any = {
           key: order.key_id || 'rzp_test_inkflow',
           amount: order.amount,
           currency: order.currency || 'INR',
           name: 'InkFlow Pro',
           description: 'Unlimited Adaptive Rewrites & Multi-Context Genomes',
-          order_id: order.order_id,
           handler: async (response: any) => {
             try {
               await paymentsApi.verify({
@@ -121,7 +120,15 @@ export const UpgradeModal: React.FC = () => {
           },
         };
 
+        if (order.order_id && !order.order_id.includes('_usr_') && !order.order_id.includes('demo')) {
+          options.order_id = order.order_id;
+        }
+
         const rzpInstance = new window.Razorpay(options);
+        rzpInstance.on('payment.failed', (response: any) => {
+          console.error('Razorpay payment failed:', response.error);
+          setIsProcessing(false);
+        });
         rzpInstance.open();
       } else {
         // Fallback for sandboxed preview if external checkout.js is blocked
