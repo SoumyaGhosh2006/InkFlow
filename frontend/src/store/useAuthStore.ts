@@ -6,12 +6,22 @@
 import { create } from 'zustand';
 import type { UserProfile } from '../types/api';
 import { authApi } from '../lib/api';
-import { signInWithGoogle, signOutUser } from '../lib/firebase';
+import {
+  signInWithGoogle,
+  signOutUser,
+  recordUserActivity,
+  isSessionExpiredDueToInactivity,
+} from '../lib/firebase';
 
 interface AuthState {
   user: UserProfile | null;
   isLoading: boolean;
   error: string | null;
+  isAuthModalOpen: boolean;
+  authModalReason: string;
+  openAuthModal: (reason?: string) => void;
+  closeAuthModal: () => void;
+  isAuthenticated: () => boolean;
   fetchUser: () => Promise<void>;
   loginWithGoogle: () => Promise<void>;
   logout: () => Promise<void>;
@@ -23,8 +33,31 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   user: null,
   isLoading: false,
   error: null,
+  isAuthModalOpen: false,
+  authModalReason: 'Sign in to access your Style Genome and start humanizing text.',
+
+  openAuthModal: (reason) => {
+    set({
+      isAuthModalOpen: true,
+      authModalReason: reason || 'Sign in to access your Style Genome and start humanizing text.',
+    });
+  },
+
+  closeAuthModal: () => set({ isAuthModalOpen: false }),
+
+  isAuthenticated: () => {
+    const user = get().user;
+    const token = localStorage.getItem('inkflow_token');
+    if (!token || !user) return false;
+    if (user.id === 'usr_local_dev') return false;
+    return true;
+  },
 
   fetchUser: async () => {
+    if (isSessionExpiredDueToInactivity()) {
+      await get().logout();
+      return;
+    }
     const token = localStorage.getItem('inkflow_token');
     if (!token) {
       set({ user: null, isLoading: false });
@@ -33,6 +66,11 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     set({ isLoading: true, error: null });
     try {
       const user = await authApi.getMe();
+      if (!user) {
+        set({ user: null, isLoading: false });
+        return;
+      }
+      recordUserActivity();
       set({ user, isLoading: false });
     } catch (err: any) {
       set({ user: null, error: err.message, isLoading: false });
@@ -44,6 +82,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     try {
       const res = await signInWithGoogle();
       if (res && res.user) {
+        recordUserActivity();
         // Immediate optimistic update with real Google credentials
         set({
           user: {
@@ -58,6 +97,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
             streakDays: 1,
             is_active: true,
           },
+          isAuthModalOpen: false,
         });
         const user = await authApi.sync({
           uid: res.user.uid,
@@ -65,7 +105,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
           displayName: res.user.displayName,
           photoUrl: res.user.photoURL || undefined,
         });
-        set({ user, isLoading: false });
+        set({ user, isLoading: false, isAuthModalOpen: false });
       } else {
         set({ isLoading: false });
       }
@@ -75,14 +115,14 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   },
 
   logout: async () => {
-    localStorage.removeItem('inkflow_token');
     await signOutUser();
-    set({ user: null });
+    set({ user: null, isAuthModalOpen: false });
   },
 
   updateWordsUsed: (delta: number) => {
     const current = get().user;
     if (!current) return;
+    recordUserActivity();
     set({
       user: {
         ...current,

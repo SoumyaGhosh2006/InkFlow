@@ -13,6 +13,7 @@
 import React, { useState } from 'react';
 import { Copy, Check, Cpu, ShieldCheck, Sparkles, Lock } from 'lucide-react';
 import { useStudioStore } from '../../store/useStudioStore';
+import { useAuthStore } from '../../store/useAuthStore';
 
 export const ActionDock: React.FC = () => {
   const {
@@ -35,6 +36,14 @@ export const ActionDock: React.FC = () => {
 
   const handleAccept = async () => {
     if (meaningCheckFailed || !transformedDraft) return;
+
+    // Gate learning adaptation: require user sign in
+    const authStore = useAuthStore.getState();
+    if (!authStore.isAuthenticated()) {
+      authStore.openAuthModal('Sign in to teach your twin and save personalized writing adaptations.');
+      return;
+    }
+
     await acceptRewrite();
     setAccepted(true);
     setTimeout(() => setAccepted(false), 2500);

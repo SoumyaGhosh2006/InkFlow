@@ -35,7 +35,7 @@ class PaymentService:
     async def create_order(
         self,
         user_id: str,
-        amount_cents: int = 49900,
+        amount_cents: int = 3900,
         currency: str = "INR",
         plan: str = "pro_monthly",
     ) -> Dict[str, Any]:

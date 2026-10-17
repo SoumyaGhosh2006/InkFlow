@@ -18,6 +18,7 @@ import { ArrowRight, Sparkles, Loader2, RefreshCw, AlertCircle } from 'lucide-re
 import { DrillCountdown } from './DrillCountdown';
 import { GenomeReveal } from './GenomeReveal';
 import { drillApi } from '../../lib/api';
+import { useAuthStore } from '../../store/useAuthStore';
 import type { DrillPrompt, DrillAnswer, StyleGenomeResponse } from '../../types/api';
 
 const DEFAULT_DRILL_TIME_SECONDS = 120; // 2 minutes
@@ -80,7 +81,14 @@ export const DrillCard: React.FC = () => {
       setCurrentIndex((prev) => prev + 1);
       setTimeLeft(prompts[currentIndex + 1]?.timeLimitSeconds || DEFAULT_DRILL_TIME_SECONDS);
     } else {
-      // All scenarios completed — submit and unlock genome
+      // All scenarios completed — submit and unlock genome (requires authenticated account)
+      const authStore = useAuthStore.getState();
+      if (!authStore.isAuthenticated()) {
+        setIsTimerRunning(false);
+        authStore.openAuthModal('Sign in to calibrate your personal Style Genome and train your writing twin model.');
+        return;
+      }
+
       setIsTimerRunning(false);
       setIsSubmitting(true);
 
@@ -109,6 +117,12 @@ export const DrillCard: React.FC = () => {
 
   // Handle manual click to Next Question with mandatory validation
   const handleNextClick = () => {
+    const authStore = useAuthStore.getState();
+    if (!authStore.isAuthenticated()) {
+      authStore.openAuthModal('Sign in to complete the Voice Calibration Drill and train your writing twin model.');
+      return;
+    }
+
     const trimmed = currentText.trim();
     if (!trimmed) {
       setValidationError('Please type your answer to this question before moving forward.');
@@ -208,6 +222,21 @@ export const DrillCard: React.FC = () => {
           <span>Reset</span>
         </button>
       </div>
+
+      {/* Unauthenticated Notification Banner */}
+      {!useAuthStore.getState().isAuthenticated() && (
+        <div className="w-full mb-4 p-3.5 rounded-2xl bg-amber-50/90 border border-amber-200/80 text-amber-950 text-xs flex items-center justify-between gap-3 shadow-2xs animate-in fade-in">
+          <span>
+            💡 <strong>Sign in required to train model:</strong> You can explore calibration scenarios, but saving your Style Genome requires an authenticated account.
+          </span>
+          <button
+            onClick={() => useAuthStore.getState().openAuthModal('Sign in to calibrate your writing twin and train your model.')}
+            className="px-3 py-1.5 rounded-xl bg-accent-primary hover:bg-accent-hover text-stone-900 font-semibold shrink-0 cursor-pointer text-xs"
+          >
+            Sign In
+          </button>
+        </div>
+      )}
 
       {/* Main Card with Smooth Horizontal Framer Motion Transitions */}
       <div className="w-full bg-surface rounded-2xl sm:rounded-3xl border border-surface-border shadow-panel p-5 sm:p-6 md:p-8 relative overflow-hidden">

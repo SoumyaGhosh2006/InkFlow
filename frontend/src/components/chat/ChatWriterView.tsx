@@ -98,6 +98,13 @@ export const ChatWriterView: React.FC = () => {
     const trimmed = input.trim();
     if (!trimmed || isLoading) return;
 
+    // Gate AI chat generation: require user sign in
+    const authStore = useAuthStore.getState();
+    if (!authStore.isAuthenticated()) {
+      authStore.openAuthModal('Sign in to compose with AI and generate drafts.');
+      return;
+    }
+
     const userMessage: ChatMessage = { role: 'user', content: trimmed };
     const updatedMessages = [...messages, userMessage];
 

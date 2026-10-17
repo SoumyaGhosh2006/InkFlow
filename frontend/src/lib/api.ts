@@ -40,6 +40,20 @@ apiClient.interceptors.request.use((config) => {
   return config;
 });
 
+// Intercept 401 Unauthorized responses to notify user and prompt sign in
+apiClient.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      localStorage.removeItem('inkflow_token');
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('inkflow:unauthorized'));
+      }
+    }
+    return Promise.reject(error);
+  }
+);
+
 // Fallback mock prompts in case of network latency or offline demo mode
 const FALLBACK_DRILL_PROMPTS: DrillPrompt[] = [
   {
@@ -313,7 +327,7 @@ export const analyticsApi = {
 // Payments & Pro Tier Upgrade Endpoints
 // -----------------------------------------------------------------------------
 export const paymentsApi = {
-  async createOrder(plan = 'pro_monthly', amount = 49900, currency = 'INR'): Promise<RazorpayOrderResponse> {
+  async createOrder(plan = 'pro_monthly', amount = 3900, currency = 'INR'): Promise<RazorpayOrderResponse> {
     try {
       const response = await apiClient.post<RazorpayOrderResponse>('/payments/create-order', {
         plan,
@@ -360,6 +374,14 @@ export const paymentsApi = {
         throw new Error(message);
       }
     }
+  },
+
+  async verifyPayment(payload: {
+    razorpay_order_id: string;
+    razorpay_payment_id: string;
+    razorpay_signature: string;
+  }): Promise<{ status: string; message: string; tier: string }> {
+    return this.verify(payload);
   },
 };
 

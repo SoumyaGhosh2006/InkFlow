@@ -9,7 +9,6 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import confetti from 'canvas-confetti';
 import { Crown, Check, X, Shield, Sparkles, Loader2, CreditCard } from 'lucide-react';
 import { useAuthStore } from '../../store/useAuthStore';
 import { useStudioStore } from '../../store/useStudioStore';
@@ -25,12 +24,12 @@ export const UpgradeModal: React.FC = () => {
   const { isPricingModalOpen, setPricingModalOpen, activeView, setActiveView } = useStudioStore();
   const { user, setUserTier, loginWithGoogle } = useAuthStore();
   const [isProcessing, setIsProcessing] = useState(false);
-  const [successMessage, setSuccessMessage] = useState<string | null>(null);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   const handleClose = React.useCallback(() => {
+    setIsProcessing(false);
+    setError(null);
     setPricingModalOpen(false);
-    setErrorMessage(null);
     if (activeView === 'pricing') {
       setActiveView('studio');
     }
@@ -54,111 +53,76 @@ export const UpgradeModal: React.FC = () => {
     !user ||
     (user.id === 'usr_local_dev' && (!user.email || user.email === 'author@inkflow.tech'));
 
-  const handleLaunchCheckout = async () => {
+  const handleUpgrade = async () => {
+    if (isProcessing) return; // Prevent double-triggering
     setIsProcessing(true);
-    setSuccessMessage(null);
-    setErrorMessage(null);
-
-    // If user is not logged in, trigger Google Sign-In first
-    if (isAnonymous) {
-      try {
-        await loginWithGoogle();
-        const activeUser = useAuthStore.getState().user;
-        if (
-          !activeUser ||
-          (activeUser.id === 'usr_local_dev' &&
-            (!activeUser.email || activeUser.email === 'author@inkflow.tech'))
-        ) {
+    setError(null);
+    try {
+      // If user is not logged in, trigger Google Sign-In first
+      if (isAnonymous) {
+        try {
+          await loginWithGoogle();
+          const activeUser = useAuthStore.getState().user;
+          if (
+            !activeUser ||
+            (activeUser.id === 'usr_local_dev' &&
+              (!activeUser.email || activeUser.email === 'author@inkflow.tech'))
+          ) {
+            setIsProcessing(false);
+            return;
+          }
+        } catch (authErr: any) {
           setIsProcessing(false);
+          setError(authErr.message || 'Please sign in with Google to complete your Pro upgrade.');
           return;
         }
-      } catch (err: any) {
-        setErrorMessage(err.message || 'Please sign in with Google to complete your Pro upgrade.');
-        setIsProcessing(false);
-        return;
-      }
-    }
-
-    try {
-      // 1. Ensure Razorpay checkout.js SDK is ready
-      if (typeof window.Razorpay !== 'function') {
-        await new Promise<void>((resolve, reject) => {
-          const script = document.createElement('script');
-          script.src = 'https://checkout.razorpay.com/v1/checkout.js';
-          script.async = true;
-          script.onload = () => resolve();
-          script.onerror = () => reject(new Error('Failed to load Razorpay checkout script.'));
-          document.body.appendChild(script);
-        });
       }
 
-      // 2. Create order on backend (amount in paise, min 100 paise)
-      const order = await paymentsApi.createOrder('pro_monthly', 49900, 'INR');
-
-      const activeUser = useAuthStore.getState().user;
-      const keyId =
-        import.meta.env.VITE_RAZORPAY_KEY_ID ||
-        order.key_id ||
-        'rzp_test_Tocc9I7thX67O1';
-
-      const options: any = {
-        key: keyId,
+      // 1. Create order for ₹39 (3900 paise)
+      const order = await paymentsApi.createOrder('pro_monthly', 3900, 'INR');
+      const options = {
+        key: import.meta.env.VITE_RAZORPAY_KEY_ID,
         amount: order.amount,
-        currency: order.currency || 'INR',
+        currency: order.currency,
         name: 'InkFlow Pro',
-        description: 'Unlimited Adaptive Rewrites & Multi-Context Genomes',
-        handler: async (response: any) => {
+        description: 'Monthly Pro Subscription (₹39)',
+        order_id: order.order_id,
+        handler: async function (response: any) {
           try {
-            await paymentsApi.verify({
-              razorpay_order_id: response.razorpay_order_id || order.order_id,
-              razorpay_payment_id: response.razorpay_payment_id || `pay_${Date.now()}`,
-              razorpay_signature: response.razorpay_signature || '',
+            await paymentsApi.verifyPayment({
+              razorpay_order_id: response.razorpay_order_id,
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_signature: response.razorpay_signature,
             });
-
             setUserTier('pro');
-            setSuccessMessage('Welcome to InkFlow Pro! Your account has been upgraded.');
-            confetti({ particleCount: 90, spread: 70, origin: { y: 0.6 } });
-          } catch (err: any) {
-            console.error('Payment verification failed:', err);
-            setErrorMessage(err.message || 'Payment signature verification failed.');
-          } finally {
             setIsProcessing(false);
+            setPricingModalOpen(false);
+          } catch (err: any) {
+            setIsProcessing(false);
+            setError('Payment verification failed. Please contact support.');
           }
         },
-        prefill: {
-          name: activeUser?.displayName || 'InkFlow Author',
-          email: activeUser?.email || 'author@inkflow.tech',
-        },
-        theme: {
-          color: '#F59E0B',
-        },
         modal: {
-          ondismiss: () => {
-            console.info('Razorpay checkout modal closed by user.');
+          // Crucial: Reset loading state immediately when user cancels/exits checkout
+          ondismiss: function () {
             setIsProcessing(false);
+            setError(null);
           },
+          escape: true,
+          backdropclose: false,
         },
+        theme: { color: '#0F172A' },
       };
-
-      if (order.order_id && !order.order_id.includes('_usr_') && !order.order_id.includes('demo')) {
-        options.order_id = order.order_id;
-      }
-
-      const rzpInstance = new window.Razorpay(options);
-      rzpInstance.on('payment.failed', (response: any) => {
-        console.error('Razorpay payment failed:', response.error);
-        setErrorMessage(
-          response.error?.description ||
-          response.error?.reason ||
-          'Payment failed. Please try a different card, UPI ID, or netbanking.'
-        );
+      const rzp = new (window as any).Razorpay(options);
+      // Replace blocking alert() with inline state so it doesn't trigger tap-bleed loops
+      rzp.on('payment.failed', function (resp: any) {
         setIsProcessing(false);
+        setError(resp.error?.description || 'Payment was declined or cancelled.');
       });
-      rzpInstance.open();
+      rzp.open();
     } catch (err: any) {
-      console.error('Checkout error:', err);
-      setErrorMessage(err.message || 'Checkout failed. Please check your connection and try again.');
       setIsProcessing(false);
+      setError(err.message || 'Failed to initialize payment gateway.');
     }
   };
 
@@ -171,11 +135,18 @@ export const UpgradeModal: React.FC = () => {
         onClick={(e) => e.stopPropagation()}
         className="w-full max-w-2xl bg-surface rounded-3xl border border-surface-border shadow-panel p-8 space-y-6 animate-in zoom-in-95 duration-200 relative"
       >
-        {/* Close Button */}
+        {/* Close Button - Never disable, allow force-closing */}
         <button
-          onClick={handleClose}
+          onClick={() => {
+            setIsProcessing(false);
+            setError(null);
+            setPricingModalOpen(false);
+            if (activeView === 'pricing') {
+              setActiveView('studio');
+            }
+          }}
+          className="absolute top-6 right-6 p-2 rounded-xl text-ink-secondary hover:text-ink-primary hover:bg-canvas transition-colors cursor-pointer"
           aria-label="Close modal"
-          className="absolute top-6 right-6 p-2 rounded-full text-stone-400 hover:text-ink-primary hover:bg-surface-subtle transition-colors cursor-pointer"
         >
           <X className="w-5 h-5" />
         </button>
@@ -193,19 +164,11 @@ export const UpgradeModal: React.FC = () => {
           </p>
         </div>
 
-        {/* Success Alert */}
-        {successMessage && (
-          <div className="p-3.5 rounded-xl bg-emerald-50 border border-emerald-300 text-emerald-900 text-xs font-medium flex items-center space-x-2 animate-in fade-in">
-            <Check className="w-4 h-4 text-emerald-600 flex-shrink-0" />
-            <span>{successMessage}</span>
-          </div>
-        )}
-
         {/* Error Alert */}
-        {errorMessage && (
+        {error && (
           <div className="p-3.5 rounded-xl bg-red-50 border border-red-300 text-red-900 text-xs font-medium flex items-center space-x-2 animate-in fade-in">
             <X className="w-4 h-4 text-red-600 flex-shrink-0" />
-            <span>{errorMessage}</span>
+            <span>{error}</span>
           </div>
         )}
 
@@ -261,7 +224,7 @@ export const UpgradeModal: React.FC = () => {
                   <Sparkles className="w-4 h-4 text-accent-primary" />
                   <span>InkFlow Pro</span>
                 </h3>
-                <span className="text-sm font-mono font-bold text-amber-950">₹499 / mo</span>
+                <span className="text-sm font-mono font-bold text-amber-950">₹39 / mo</span>
               </div>
               <p className="text-xs text-amber-900/80">
                 For researchers, academics, and professionals who write daily.
@@ -289,7 +252,7 @@ export const UpgradeModal: React.FC = () => {
 
             <div className="pt-4 border-t border-amber-200/60">
               <button
-                onClick={handleLaunchCheckout}
+                onClick={handleUpgrade}
                 disabled={isProcessing || isAlreadyPro}
                 className="w-full py-2.5 px-3 rounded-xl bg-accent-primary hover:bg-accent-hover disabled:bg-stone-300 text-stone-900 font-semibold text-xs flex items-center justify-center space-x-1.5 shadow-sm transition-all cursor-pointer"
               >
@@ -306,12 +269,12 @@ export const UpgradeModal: React.FC = () => {
                 ) : isAnonymous ? (
                   <>
                     <CreditCard className="w-3.5 h-3.5" />
-                    <span>Sign In with Google to Upgrade (₹499)</span>
+                    <span>Sign In with Google to Upgrade (₹39)</span>
                   </>
                 ) : (
                   <>
                     <CreditCard className="w-3.5 h-3.5" />
-                    <span>Upgrade with Razorpay (₹499)</span>
+                    <span>Upgrade with Razorpay (₹39)</span>
                   </>
                 )}
               </button>

@@ -126,6 +126,13 @@ export const useStudioStore = create<StudioState>((set, get) => ({
     const { inputDraft, inputType, context } = get();
     if (!inputDraft.trim()) return;
 
+    // Gate transform activity: require user sign in
+    const authStore = useAuthStore.getState();
+    if (!authStore.isAuthenticated()) {
+      authStore.openAuthModal('Sign in to humanize your writing draft and eliminate AI slop.');
+      return;
+    }
+
     set({
       isTransforming: true,
       transformError: null,

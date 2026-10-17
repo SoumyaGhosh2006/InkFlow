@@ -9,6 +9,8 @@ import {
   signInWithPopup,
   signOut as firebaseSignOut,
   onAuthStateChanged,
+  setPersistence,
+  browserLocalPersistence,
   type Auth,
   type User,
 } from 'firebase/auth';
@@ -22,6 +24,44 @@ const firebaseConfig = {
   appId: import.meta.env.VITE_FIREBASE_APP_ID,
 };
 
+// 1-Week Inactivity Timeout Constant (7 days in milliseconds)
+export const INACTIVITY_TIMEOUT_MS = 7 * 24 * 60 * 60 * 1000;
+export const LAST_ACTIVITY_KEY = 'inkflow_last_activity';
+
+/**
+ * Record user activity timestamp to localStorage, throttled.
+ */
+let lastLoggedActivity = 0;
+export function recordUserActivity(): void {
+  const now = Date.now();
+  if (now - lastLoggedActivity > 30000) {
+    lastLoggedActivity = now;
+    if (localStorage.getItem('inkflow_token')) {
+      localStorage.setItem(LAST_ACTIVITY_KEY, now.toString());
+    }
+  }
+}
+
+/**
+ * Check if the active session has exceeded 1 week of complete inactivity.
+ */
+export function isSessionExpiredDueToInactivity(): boolean {
+  const token = localStorage.getItem('inkflow_token');
+  if (!token) return false;
+
+  const lastActiveStr = localStorage.getItem(LAST_ACTIVITY_KEY);
+  if (!lastActiveStr) {
+    // If token exists but no timestamp was recorded yet, seed it now
+    localStorage.setItem(LAST_ACTIVITY_KEY, Date.now().toString());
+    return false;
+  }
+
+  const lastActive = parseInt(lastActiveStr, 10);
+  if (isNaN(lastActive)) return false;
+
+  return Date.now() - lastActive > INACTIVITY_TIMEOUT_MS;
+}
+
 // Initialize Firebase only if API key is configured
 let app: FirebaseApp | null = null;
 let auth: Auth | null = null;
@@ -34,6 +74,10 @@ if (firebaseConfig.apiKey && firebaseConfig.projectId) {
   try {
     app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
     auth = getAuth(app);
+    // Explicitly configure permanent local persistence (persists across browser restarts and tab sessions)
+    setPersistence(auth, browserLocalPersistence).catch((err) => {
+      console.warn('Failed to configure browserLocalPersistence:', err);
+    });
   } catch (err) {
     console.warn('Firebase initialization skipped or failed:', err);
   }
@@ -54,6 +98,7 @@ export async function signInWithGoogle(): Promise<{ user: User; token: string } 
     const result = await signInWithPopup(auth, googleProvider);
     const token = await result.user.getIdToken();
     localStorage.setItem('inkflow_token', token);
+    localStorage.setItem(LAST_ACTIVITY_KEY, Date.now().toString());
     return { user: result.user, token };
   } catch (err: any) {
     console.error('Google Sign-In error:', err);
@@ -71,13 +116,14 @@ export async function signInWithGoogle(): Promise<{ user: User; token: string } 
 }
 
 /**
- * Sign out of Firebase and clear local token
+ * Sign out of Firebase and clear local token and activity tracking
  */
 export async function signOutUser(): Promise<void> {
   if (auth) {
     await firebaseSignOut(auth);
   }
   localStorage.removeItem('inkflow_token');
+  localStorage.removeItem(LAST_ACTIVITY_KEY);
 }
 
 /**

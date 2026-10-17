@@ -14,12 +14,12 @@ async def test_create_order_valid():
     """Verify order creation succeeds with order_id, amount, and currency."""
     order = await payment_service.create_order(
         user_id="usr_test_123",
-        amount_cents=49900,
+        amount_cents=3900,
         currency="INR",
         plan="pro_monthly",
     )
     assert "order_id" in order
-    assert order["amount"] == 49900
+    assert order["amount"] == 3900
     assert order["currency"] == "INR"
 
 

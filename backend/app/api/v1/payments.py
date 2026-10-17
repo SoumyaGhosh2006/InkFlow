@@ -37,7 +37,7 @@ router = APIRouter()
 class CreateOrderRequest(BaseModel):
     """Payload to initiate a Pro tier subscription checkout."""
     plan: str = Field(default="pro_monthly", description="Subscription plan identifier.")
-    amount: Optional[int] = Field(default=49900, description="Amount in paise (min 100 paise).")
+    amount: Optional[int] = Field(default=3900, description="Amount in paise (min 100 paise).")
     currency: Optional[str] = Field(default="INR", description="Payment currency ISO code.")
 
 
@@ -60,7 +60,7 @@ async def create_order(
     POST /api/v1/payments/create-order:
     Creates a Razorpay order for Pro upgrade (supports UPI, cards, netbanking).
     """
-    amount_cents = payload.amount if payload.amount is not None else 49900
+    amount_cents = payload.amount if payload.amount is not None else 3900
     if amount_cents < 100:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,

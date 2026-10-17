@@ -17,9 +17,10 @@ import { ChatWriterView } from './components/chat/ChatWriterView';
 import { DrillCard } from './components/drill/DrillCard';
 import { WritingEvolutionView } from './components/evolution/WritingEvolutionView';
 import { UpgradeModal } from './components/payments/UpgradeModal';
+import { AuthModal } from './components/auth/AuthModal';
 import { useStudioStore } from './store/useStudioStore';
 import { useAuthStore } from './store/useAuthStore';
-import { onAuthChange } from './lib/firebase';
+import { onAuthChange, recordUserActivity, isSessionExpiredDueToInactivity } from './lib/firebase';
 
 export const App: React.FC = () => {
   const {
@@ -29,15 +30,52 @@ export const App: React.FC = () => {
     isStatsDrawerOpen,
     setStatsDrawerOpen,
   } = useStudioStore();
-  const { fetchUser } = useAuthStore();
+  const { fetchUser, logout } = useAuthStore();
 
   useEffect(() => {
+    // Check if session has expired due to 1 week of complete inactivity
+    if (isSessionExpiredDueToInactivity()) {
+      console.info('InkFlow session ended due to 1-week inactivity policy.');
+      logout();
+    } else {
+      recordUserActivity();
+    }
+
+    // Attach passive activity listeners to track user interaction for the 1-week rule
+    let lastRecorded = 0;
+    const handleActivity = () => {
+      const now = Date.now();
+      if (now - lastRecorded > 30000) {
+        lastRecorded = now;
+        if (isSessionExpiredDueToInactivity()) {
+          logout();
+        } else {
+          recordUserActivity();
+        }
+      }
+    };
+
+    const events = ['mousedown', 'keydown', 'touchstart', 'scroll'];
+    events.forEach((evt) => window.addEventListener(evt, handleActivity, { passive: true }));
+
+    // Periodic 1-hour liveness check
+    const interval = setInterval(() => {
+      if (isSessionExpiredDueToInactivity()) {
+        logout();
+      }
+    }, 60 * 60 * 1000);
+
     // Synchronize auth state and bearer token with Firebase auth events
     const unsubscribe = onAuthChange(async (fbUser) => {
       if (fbUser) {
+        if (isSessionExpiredDueToInactivity()) {
+          await logout();
+          return;
+        }
         try {
           const token = await fbUser.getIdToken();
           localStorage.setItem('inkflow_token', token);
+          recordUserActivity();
           await fetchUser();
         } catch (e) {
           console.warn('Failed to refresh Firebase token:', e);
@@ -48,11 +86,21 @@ export const App: React.FC = () => {
       }
     });
 
+    // Listen for unauthorized 401 events from the API client
+    const handleUnauthorized = () => {
+      logout();
+      useAuthStore.getState().openAuthModal('Please sign in to proceed with this action.');
+    };
+    window.addEventListener('inkflow:unauthorized', handleUnauthorized);
+
     fetchUser();
     return () => {
+      events.forEach((evt) => window.removeEventListener(evt, handleActivity));
+      window.removeEventListener('inkflow:unauthorized', handleUnauthorized);
+      clearInterval(interval);
       if (typeof unsubscribe === 'function') unsubscribe();
     };
-  }, [fetchUser]);
+  }, [fetchUser, logout]);
 
   // If user navigates to pricing view directly, pop the upgrade modal and return view to studio
   useEffect(() => {
@@ -119,6 +167,9 @@ export const App: React.FC = () => {
 
       {/* Global Pro Upgrade Modal */}
       <UpgradeModal />
+
+      {/* Global Auth Sign-in Notification Modal */}
+      <AuthModal />
     </div>
   );
 };
