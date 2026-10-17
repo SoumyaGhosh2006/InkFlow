@@ -188,7 +188,7 @@ export const UpgradeModal: React.FC = () => {
               <ul className="space-y-2 pt-2 text-xs text-ink-primary">
                 <li className="flex items-center space-x-2">
                   <Check className="w-3.5 h-3.5 text-stone-500" />
-                  <span>1,500 words per day</span>
+                  <span>5,000 words per day</span>
                 </li>
                 <li className="flex items-center space-x-2">
                   <Check className="w-3.5 h-3.5 text-stone-500" />

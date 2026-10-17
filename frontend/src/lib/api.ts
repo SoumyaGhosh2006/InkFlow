@@ -138,7 +138,7 @@ export const authApi = {
         photoUrl: fbUser?.photoUrl || current?.photoURL || undefined,
         tier: 'free',
         wordsUsedThisWeek: 0,
-        weeklyWordLimit: 1500,
+        weeklyWordLimit: 5000,
         lastWeekReset: new Date().toISOString(),
         streakDays: 1,
         is_active: true,
@@ -282,7 +282,7 @@ export const analyticsApi = {
         return {
           streakDays: 4,
           wordsUsedThisWeek: 820,
-          weeklyWordLimit: 1500,
+          weeklyWordLimit: 5000,
           totalRewritesEvaluated: 18,
           averageEvalScores: {
             slopReductionScore: 94.2,

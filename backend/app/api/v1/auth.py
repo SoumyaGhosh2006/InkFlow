@@ -46,7 +46,7 @@ def _format_user_response(user_doc: Dict[str, Any]) -> UserResponse:
     )
     user_id = str(user_doc.get("_id", ""))
     tier = UserTier(user_doc.get("tier", "free"))
-    limit = 999999 if tier == UserTier.PRO else getattr(settings, "FREE_TIER_DAILY_WORD_LIMIT", 1500)
+    limit = 999999 if tier == UserTier.PRO else getattr(settings, "FREE_TIER_DAILY_WORD_LIMIT", 5000)
     return UserResponse(
         id=user_id,
         firebaseUid=user_doc.get("firebaseUid"),

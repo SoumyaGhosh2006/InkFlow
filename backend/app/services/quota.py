@@ -137,7 +137,7 @@ def enforce_and_reset_quota(
     if user.get("tier") == "pro":
         return user, True, None
 
-    limit = getattr(settings, "FREE_TIER_DAILY_WORD_LIMIT", 1500)
+    limit = getattr(settings, "FREE_TIER_DAILY_WORD_LIMIT", 5000)
     current_used = user.get("wordsUsedThisWeek", user.get("words_used_this_week", 0))
 
     if current_used + requested_words > limit:
@@ -181,7 +181,7 @@ async def check_and_apply_quota(
             "firebaseUid": user_id,
             "tier": "free",
             "wordsUsedThisWeek": 0,
-            "weeklyWordLimit": getattr(settings, "FREE_TIER_DAILY_WORD_LIMIT", 1500),
+            "weeklyWordLimit": getattr(settings, "FREE_TIER_DAILY_WORD_LIMIT", 5000),
             "lastWeekReset": start_of_week,
         }
 
@@ -189,7 +189,7 @@ async def check_and_apply_quota(
     user, allowed, error_msg = enforce_and_reset_quota(user, words_to_consume)
 
     if not allowed:
-        limit = getattr(settings, "FREE_TIER_DAILY_WORD_LIMIT", 1500)
+        limit = getattr(settings, "FREE_TIER_DAILY_WORD_LIMIT", 5000)
         current_used = user.get("wordsUsedThisWeek", 0)
         raise QuotaExceededException(words_used=current_used, limit=limit)
 

@@ -62,7 +62,7 @@ export const AuthModal: React.FC = () => {
         <div className="p-4 rounded-2xl bg-canvas border border-surface-border space-y-2.5 text-xs text-ink-primary">
           <div className="flex items-center space-x-2.5">
             <Zap className="w-4 h-4 text-accent-primary shrink-0" />
-            <span><strong>1,500 daily words</strong> free quota resets daily</span>
+            <span><strong>5,000 daily words</strong> free quota resets daily</span>
           </div>
           <div className="flex items-center space-x-2.5">
             <Sparkles className="w-4 h-4 text-emerald-600 shrink-0" />

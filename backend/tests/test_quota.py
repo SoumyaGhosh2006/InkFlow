@@ -83,16 +83,16 @@ def test_enforce_and_reset_quota_spec_function():
     # 1. Under quota free user
     user = {
         "tier": "free",
-        "wordsUsedThisWeek": 600,
-        "weeklyWordLimit": 1500,
+        "wordsUsedThisWeek": 4600,
+        "weeklyWordLimit": 5000,
         "lastWeekReset": start_of_week,
     }
-    updated_user, allowed, err = enforce_and_reset_quota(user, 400)
+    updated_user, allowed, err = enforce_and_reset_quota(user, 300)
     assert allowed is True
     assert err is None
 
     # 2. Over quota free user
-    updated_user, allowed, err = enforce_and_reset_quota(user, 1000)
+    updated_user, allowed, err = enforce_and_reset_quota(user, 600)
     assert allowed is False
     assert "Weekly limit reached" in err
     assert "Upgrade to Pro" in err
@@ -110,8 +110,8 @@ def test_enforce_and_reset_quota_spec_function():
     # 4. In-flight reset on stale user (lastWeekReset 2 weeks ago)
     stale_user = {
         "tier": "free",
-        "wordsUsedThisWeek": 1400,
-        "weeklyWordLimit": 1500,
+        "wordsUsedThisWeek": 4900,
+        "weeklyWordLimit": 5000,
         "lastWeekReset": start_of_week - timedelta(days=14),
     }
     updated_stale, allowed_stale, err_stale = enforce_and_reset_quota(stale_user, 200)
@@ -133,8 +133,8 @@ async def test_free_tier_within_quota_succeeds():
     mock_user = {
         "_id": ObjectId(user_id),
         "tier": "free",
-        "wordsUsedThisWeek": 900,
-        "weeklyWordLimit": 1500,
+        "wordsUsedThisWeek": 4000,
+        "weeklyWordLimit": 5000,
         "lastWeekReset": start_of_week,
     }
 
@@ -147,15 +147,15 @@ async def test_free_tier_within_quota_succeeds():
         user, consumed, remaining = await check_and_apply_quota(user_id, sample_text)
 
         assert consumed == 300
-        assert user["wordsUsedThisWeek"] == 1200
-        assert remaining == 300  # 1500 - 1200
+        assert user["wordsUsedThisWeek"] == 4300
+        assert remaining == 700  # 5000 - 4300
         mock_col.update_one.assert_awaited_once()
 
 
 @pytest.mark.asyncio
 async def test_free_tier_exceeding_quota_raises_exception():
     """
-    Verifies that when a Free tier user attempts to exceed 1,500 words,
+    Verifies that when a Free tier user attempts to exceed 5,000 words,
     QuotaExceededException (HTTP 403 Forbidden with QUOTA_EXCEEDED) is raised.
     """
     user_id = str(ObjectId())
@@ -166,8 +166,8 @@ async def test_free_tier_exceeding_quota_raises_exception():
     mock_user = {
         "_id": ObjectId(user_id),
         "tier": "free",
-        "wordsUsedThisWeek": 1400,
-        "weeklyWordLimit": 1500,
+        "wordsUsedThisWeek": 4900,
+        "weeklyWordLimit": 5000,
         "lastWeekReset": start_of_week,
     }
 
@@ -176,7 +176,7 @@ async def test_free_tier_exceeding_quota_raises_exception():
     mock_col.update_one = AsyncMock()
 
     with patch("app.services.quota.get_users_collection", return_value=mock_col):
-        # 150 words incoming pushes total to 1,550 > 1,500
+        # 150 words incoming pushes total to 5,050 > 5,000
         sample_text = "word " * 150
         with pytest.raises(QuotaExceededException) as exc_info:
             await check_and_apply_quota(user_id, sample_text)
@@ -189,7 +189,7 @@ async def test_free_tier_exceeding_quota_raises_exception():
 @pytest.mark.asyncio
 async def test_pro_tier_bypasses_quota_limit():
     """
-    Verifies that Pro tier users can consume more than 1,500 words without restriction.
+    Verifies that Pro tier users can consume words without restriction.
     """
     user_id = str(ObjectId())
     now = datetime.now(timezone.utc)
@@ -199,7 +199,7 @@ async def test_pro_tier_bypasses_quota_limit():
     mock_user = {
         "_id": ObjectId(user_id),
         "tier": "pro",
-        "wordsUsedThisWeek": 5000,
+        "wordsUsedThisWeek": 10000,
         "lastWeekReset": start_of_week,
     }
 
@@ -212,7 +212,7 @@ async def test_pro_tier_bypasses_quota_limit():
         user, consumed, remaining = await check_and_apply_quota(user_id, sample_text)
 
         assert consumed == 1000
-        assert user["wordsUsedThisWeek"] == 6000
+        assert user["wordsUsedThisWeek"] == 11000
         assert remaining == 999999
         mock_col.update_one.assert_awaited_once()
 
@@ -228,8 +228,8 @@ async def test_lazy_reset_triggered_when_overdue():
     mock_user = {
         "_id": ObjectId(user_id),
         "tier": "free",
-        "wordsUsedThisWeek": 1450,
-        "weeklyWordLimit": 1500,
+        "wordsUsedThisWeek": 4950,
+        "weeklyWordLimit": 5000,
         "lastWeekReset": past_reset,
     }
 
@@ -243,5 +243,5 @@ async def test_lazy_reset_triggered_when_overdue():
 
         assert consumed == 100
         assert user["wordsUsedThisWeek"] == 100
-        assert remaining == 1400
+        assert remaining == 4900
         mock_col.update_one.assert_awaited_once()

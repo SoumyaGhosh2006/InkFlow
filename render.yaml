@@ -48,9 +48,9 @@ services:
       - key: FALLBACK_READ_TIMEOUT
         value: "8.0"
       - key: FREE_TIER_DAILY_WORD_LIMIT
-        value: "1500"
+        value: "5000"
       - key: FREE_TIER_WEEKLY_WORD_LIMIT
-        value: "1500"
+        value: "5000"
       - key: FIREBASE_PROJECT_ID
         sync: false
       - key: RAZORPAY_KEY_ID
