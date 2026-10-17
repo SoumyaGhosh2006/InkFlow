@@ -81,7 +81,7 @@ export const UpgradeModal: React.FC = () => {
       // 1. Create order for ₹39 (3900 paise)
       const order = await paymentsApi.createOrder('pro_monthly', 3900, 'INR');
       const options = {
-        key: import.meta.env.VITE_RAZORPAY_KEY_ID,
+        key: import.meta.env.VITE_RAZORPAY_KEY_ID || order.key_id,
         amount: order.amount,
         currency: order.currency,
         name: 'InkFlow Pro',
