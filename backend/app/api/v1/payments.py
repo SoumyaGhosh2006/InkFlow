@@ -164,7 +164,11 @@ async def verify_payment(
             )
         logger.info("User %s successfully upgraded to PRO tier in MongoDB.", user_id)
     except Exception as db_exc:
-        logger.warning("Could not persist PRO upgrade in MongoDB (%s); continuing with active session: %s", user_id, db_exc)
+        logger.error("Could not persist PRO upgrade in MongoDB (%s): %s", user_id, db_exc)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Payment signature verified, but failed to persist Pro subscription to database. Please contact support.",
+        )
 
     return {
         "status": "success",

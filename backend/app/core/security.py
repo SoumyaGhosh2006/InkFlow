@@ -70,9 +70,24 @@ def verify_firebase_or_jwt_token(token: str) -> Optional[Dict[str, Any]]:
             "name": "Test User",
         }
 
-    # 3. Fallback: try unverified decode for development inspection
+    # 3. Fallback: decode claims for Firebase tokens with production audience and expiry checks
     try:
         unverified = jwt.get_unverified_claims(token)
+        if settings.ENVIRONMENT == "production" and not settings.DEBUG:
+            now_ts = int(datetime.now(timezone.utc).timestamp())
+            exp = unverified.get("exp")
+            if exp and exp < now_ts:
+                logger.warning("Token expired in production: %s < %s", exp, now_ts)
+                return None
+            aud = unverified.get("aud")
+            iss = unverified.get("iss")
+            expected_aud = settings.FIREBASE_PROJECT_ID
+            if expected_aud:
+                if aud != expected_aud and iss != f"https://securetoken.google.com/{expected_aud}":
+                    logger.warning("Token audience mismatch in production: aud=%s, expected=%s", aud, expected_aud)
+                    return None
+            elif not aud and not iss:
+                return None
         return unverified
     except Exception:
         return None

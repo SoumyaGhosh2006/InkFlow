@@ -45,8 +45,8 @@ export const StatsSidebar: React.FC = () => {
       setPricingModalOpen(true);
     }
   };
-  const limit = isPro ? 999999 : (user?.weeklyWordLimit && user.weeklyWordLimit <= 5000 ? user.weeklyWordLimit : 5000);
-  const wordsUsed = user?.wordsUsedThisWeek || 215;
+  const limit = isPro ? 999999 : (user?.weeklyWordLimit || 5000);
+  const wordsUsed = user ? (user.wordsUsedThisWeek ?? 0) : 0;
   const wordsLeft = Math.max(0, limit - wordsUsed);
   const percentUsed = isPro ? 10 : Math.min(100, Math.round((wordsUsed / limit) * 100));
   const streakDays = user?.streakDays || 1;

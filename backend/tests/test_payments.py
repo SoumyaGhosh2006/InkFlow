@@ -72,3 +72,48 @@ def test_verify_signature_missing_fields():
     assert payment_service.verify_signature("", "pay_123", "sig_123") is False
     assert payment_service.verify_signature("order_123", "", "sig_123") is False
     assert payment_service.verify_signature("order_123", "pay_123", "") is False
+
+
+@pytest.mark.asyncio
+async def test_verify_payment_endpoint_db_failure_raises_500():
+    """Verify that a database update failure raises HTTP 500 instead of returning false success."""
+    from unittest.mock import patch, AsyncMock
+    from fastapi import HTTPException
+    from app.api.v1.payments import verify_payment, PaymentVerificationRequest
+
+    payload = PaymentVerificationRequest(
+        razorpay_order_id="order_123",
+        razorpay_payment_id="pay_123",
+        razorpay_signature="valid_mock_sig",
+    )
+    current_user = {"_id": "usr_test_123", "email": "test@inkflow.app", "tier": "free"}
+
+    with patch.object(payment_service, "verify_signature", return_value=True):
+        with patch("app.api.v1.payments.get_users_collection") as mock_col:
+            mock_col.return_value.update_one = AsyncMock(side_effect=Exception("MongoDB connection timeout"))
+            with pytest.raises(HTTPException) as exc_info:
+                await verify_payment(payload, current_user)
+            assert exc_info.value.status_code == 500
+            assert "failed to persist Pro subscription" in exc_info.value.detail
+
+
+@pytest.mark.asyncio
+async def test_verify_payment_endpoint_success():
+    """Verify successful verification updates tier in DB and returns pro tier."""
+    from unittest.mock import patch, AsyncMock
+    from app.api.v1.payments import verify_payment, PaymentVerificationRequest
+
+    payload = PaymentVerificationRequest(
+        razorpay_order_id="order_123",
+        razorpay_payment_id="pay_123",
+        razorpay_signature="valid_mock_sig",
+    )
+    current_user = {"_id": "usr_test_123", "email": "test@inkflow.app", "tier": "free"}
+
+    with patch.object(payment_service, "verify_signature", return_value=True):
+        with patch("app.api.v1.payments.get_users_collection") as mock_col:
+            mock_col.return_value.update_one = AsyncMock(return_value=None)
+            res = await verify_payment(payload, current_user)
+            assert res["status"] == "success"
+            assert res["tier"] == "pro"
+

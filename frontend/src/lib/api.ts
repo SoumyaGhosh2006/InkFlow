@@ -353,7 +353,7 @@ export const paymentsApi = {
     }
   },
 
-  async verify(payload: {
+  async verifyPayment(payload: {
     razorpay_order_id: string;
     razorpay_payment_id: string;
     razorpay_signature: string;
@@ -374,14 +374,6 @@ export const paymentsApi = {
         throw new Error(message);
       }
     }
-  },
-
-  async verifyPayment(payload: {
-    razorpay_order_id: string;
-    razorpay_payment_id: string;
-    razorpay_signature: string;
-  }): Promise<{ status: string; message: string; tier: string }> {
-    return this.verify(payload);
   },
 };
 

@@ -47,9 +47,11 @@ services:
         value: "2.0"
       - key: FALLBACK_READ_TIMEOUT
         value: "8.0"
+      - key: FREE_TIER_DAILY_WORD_LIMIT
+        value: "5000"
       - key: FREE_TIER_WEEKLY_WORD_LIMIT
-        value: "2500"
+        value: "5000"
       - key: SENTRY_DSN
         sync: false
       - key: CORS_ORIGINS
-        value: "http://localhost:3000,http://localhost:5173,https://inkflow.tech,https://www.inkflow.tech,https://inkflow.app"
+        value: "http://localhost:3000,http://localhost:5173,https://ink-flow-twin.vercel.app,https://inkflow.tech,https://www.inkflow.tech,https://inkflow.app"
