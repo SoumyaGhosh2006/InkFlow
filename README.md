@@ -1,48 +1,57 @@
 # 🖋️ InkFlow
 
-**Adaptive Writing Twin & Anti-AI-Slop Studio with Psycholinguistic Voice Calibration & Factual Quality Gates**
+**An adaptive writing twin that removes AI slop, preserves your real voice, and guards your facts.**
 
 [![Live Demo](https://img.shields.io/badge/Live_Demo-ink--flow--twin.vercel.app-16a34a?style=for-the-badge)](https://ink-flow-twin.vercel.app)
 [![Backend API](https://img.shields.io/badge/Render_API-Online-amber?style=for-the-badge)](https://inkflow-backend-73hf.onrender.com/api/v1)
-[![Open-Weight AI](https://img.shields.io/badge/Open--Weight_AI-Groq_120B_%2F_20B-purple?style=for-the-badge)](https://groq.com)
-[![Test Suite](https://img.shields.io/badge/Pytest_Suite-45%2F45_Passed-blue?style=for-the-badge)](./backend/tests)
+[![AI Engine](https://img.shields.io/badge/Open--Weight_AI-Groq_120B_%2F_20B-purple?style=for-the-badge)](https://groq.com)
+[![Tests](https://img.shields.io/badge/Tests-Passing-blue?style=for-the-badge)](./backend/tests)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg?style=for-the-badge)](./LICENSE)
 
 ---
 
-## 🌟 Overview & Core Value Proposition
+## 🌟 What is InkFlow?
 
-**InkFlow** is an adaptive writing twin and anti-AI-slop studio engineered for university students, researchers, professors, and workplace professionals.
+Most AI writing assistants make everyone sound identical. They flatten your sentences and pepper your drafts with synthetic clichés like *"delve"*, *"tapestry"*, *"in conclusion"*, and *"it is important to note"*. Generic "humanizers" aren't much better—they often just swap words with awkward synonyms or inject fake typos.
 
-While generic AI humanizers and consumer chatbots rely on naive synonym swapping or synthetic punctuation errors that strip personal identity, InkFlow captures an author's authentic **Style DNA** via an empirical **3-minute psycholinguistic onboarding drill**. It personalizes drafts into the author's organic cadence, enforces factual integrity via a semantic **Meaning Gate** with reason-aware retry loops, preserves natural punctuation quirks (dashes, commas, parenthetical pauses), and adaptively evolves over time through a **noise-resistant cross-session recurrence filter**.
+**InkFlow** takes a different approach: it creates your personal **writing twin**.
+
+Through a quick 3-minute onboarding drill, InkFlow learns how you naturally write—your typical sentence lengths, how you transition between thoughts, and the punctuation quirks you love. When you feed it a rough draft or quick bullet points, it rewrites the text in your authentic cadence, verifies that your core facts didn't get scrambled, and continuously learns from your edits over time.
 
 ![InkFlow Studio Preview](frontend/src/assets/hero.png)
 
-### Why Open-Source & Open-Weight AI is Essential to InkFlow:
-1. **Absolute Data Sovereignty & Zero Training Retention**: Confidential workplace memos, research proposals, personal correspondences, and unique stylistic fingerprints are never routed through closed corporate AI training pipelines. InkFlow runs strictly on open-weight foundation models (**`openai/gpt-oss-120b`** and **`openai/gpt-oss-20b`**) via Groq's low-latency LPU infrastructure with zero telemetry or data persistence.
-2. **Uncensored Stylistic Steerability**: Proprietary commercial chatbots homogenize prose into a sanitized corporate tone saturated with synthetic clichés (*"delve"*, *"tapestry"*, *"in conclusion"*, *"it is important to note"*). Open-weight foundation models preserve natural sentence fragments, authentic informal transitions, and variable burstiness without robotic flattening.
-3. **Sustainable Unit Economics**: Decoupled multi-tier inference with instant failover delivers predictable operational economics, enabling lifetime and sustainable subscription pricing where per-token enterprise charges would otherwise destroy margins.
+---
 
-### Core Capabilities
-1. **3-Minute Psycholinguistic Voice Calibration Drill**: Captures instinctive, unpolished writing habits using three established cognitive protocols: **Pennebaker & King (1999)** stream-of-consciousness small-word analysis, the **Boston Diagnostic Cookie Theft Task (Goodglass & Kaplan 1972)** detail-orientation assessment, and **Labov & Waletzky (1967)** narrative cadence evaluation.
-2. **4-Stage Sequential Rewrite Pipeline with Reason-Aware Retry Gate**: Advances drafts through **Ingestion → Tone Transformation → Meaning Verification Gate → Light Grammar Pass**. If semantic consistency falls below $85\%$, the pipeline automatically re-executes Stage 2 with the exact `drift_reason` injected into the prompt. If still unresolved, it falls back to a non-blocking amber warning state (`meaningCheckFailed: true`), ensuring the user is never stranded.
-3. **Punctuation & Burstiness Invariance**: Retains the author's idiosyncratic punctuation habits—specifically protecting em-dashes, semicolons, conversational commas, and variable sentence lengths rather than forcing standardized machine rhythms.
-4. **Noise-Resistant Cross-Session Adaptive Learning**: Tracks manual post-generation edits in the studio and requires $\ge 3$ cross-session recurrences before updating Style Genome parameters. Crucially, when `meaningCheckFailed: true`, learning is completely frozen to prevent genome poisoning from hallucinations.
-5. **Wispr Flow Aesthetic Studio**: Minimalist, warm porcelain (`#FAF9F6`) interface featuring live slop keyword detection, character-level diff overlays, radial calibration timers, writing evolution analytics, and resilient Razorpay subscription checkout.
+## 💡 Why Open-Weight Models?
+
+1. **Your Words Stay Private**: Your personal emails, research drafts, and workplace memos are never fed back into closed corporate training sets. InkFlow runs on open-weight models (`openai/gpt-oss-120b` and `20b`) via Groq's high-speed cloud with zero data retention.
+2. **Sounds Like You, Not a Corporate Memo**: Closed commercial models are tuned to sound uniform, safe, and generic. Open-weight models allow us to steer tone freely, preserving short punchy sentences, natural fragments, and genuine conversational transitions.
+3. **Fair, Predictable Pricing**: Efficient open-weight models let us keep hosting costs low and offer simple, sustainable plans without charging users per token.
 
 ---
 
-## 🏗️ System Architecture & Internal Dataflow Pipelines
+## ✨ Core Capabilities
+
+- **3-Minute Voice Calibration Drill**: A short, timed exercise using three classic writing prompts (stream of consciousness, visual description, and personal narrative) to discover your natural sentence rhythm, vocabulary variety, and transition habits.
+- **4-Stage Rewrite Pipeline**: Moves your writing through four clear steps: Ingestion & Expansion → Tone Transformation → Fact-Checking Gate → Light Grammar Polish.
+- **Meaning Gate with Guided Retries**: If a rewrite accidentally changes a key date, name, or claim, InkFlow catches the drift, explains what changed, and automatically tries again. If it's still unsure, it flags the draft with an amber warning instead of crashing or changing your facts.
+- **Punctuation Protection**: Never strips away your em-dashes, semicolons, or conversational commas. Your punctuation habits remain completely intact.
+- **Adaptive Learning**: When you make manual edits in the studio, InkFlow watches for recurring patterns across multiple sessions before updating your profile. One-off typos or unique phrasing won't mess up your Style Genome.
+- **Distraction-Free Studio**: Designed with warm porcelain tones inspired by Wispr Flow, featuring live slop keyword detection, character diffs, and real-time quota tracking.
+
+---
+
+## 🏗️ System Architecture
 
 ```text
 ┌────────────────────────────────────────────────────────────────────────────────────────┐
-│                        FRONTEND CLIENT (React 19 + Vite 8 SPA)                         │
+│                        FRONTEND (React 19 + Vite 8 SPA)                                │
 │                                                                                        │
 │  [Navigation Dock] ──► [Voice Calibration Drill] ──► [Dual-Pane Transformation Studio] │
 │          │                       │                                     │               │
-│  [Evolution Charts]      [Radial Countdown]            [Live Slop Underlines & Diffs]  │
+│  [Writing Insights]      [60s Radial Timer]            [Live Slop Underlines & Diffs]  │
 │          │                       │                                     │               │
-│  [Firebase Auth (Google)]        │                     [Craftsmanship Shimmer Cycler]  │
+│  [Google / Email Auth]           │                     [Phased Loading Messages]       │
 └──────────┬───────────────────────┼─────────────────────────────────────┬───────────────┘
            │                       │                                     │
            ▼                       ▼                                     ▼
@@ -53,297 +62,236 @@ While generic AI humanizers and consumer chatbots rely on naive synonym swapping
 │  [GET  /api/v1/auth/me]    [GET  /api/v1/grill/prompts] [POST /api/v1/rewrite/accept]  │
 │                                                         [POST /api/v1/payments/*]      │
 │                                                                                        │
-│  ├── In-Flight Lazy Weekly Quota Reset Engine (Monday 00:00:00 UTC)                    │
-│  ├── 4-Stage Sequential Quality Pipeline (Generate ─► Tone ─► Meaning ─► Grammar)      │
-│  ├── Automated Multi-Metric Evals (Slop Eradication, Style Alignment, Semantic Gate)  │
-│  └── Cross-Session Recurrence Filter (>= 3 Session Threshold)                          │
+│  ├── In-Flight Weekly Quota Reset (resets every Monday at 00:00 UTC)                   │
+│  ├── 4-Stage Sequential Rewrite Pipeline (Draft ─► Voice ─► Meaning Gate ─► Grammar)   │
+│  ├── Automated Writing Evals (Slop Detection, Style Alignment, Semantic Check)         │
+│  └── Multi-Session Recurrence Filter (requires repeat edits before updating profile)  │
 └──────────┬─────────────────────────────────────────────────────────────┬───────────────┘
            │                                                             │
            ▼                                                             ▼
 ┌──────────────────────────────────────────────┐  ┌──────────────────────────────────────┐
-│       TWO-TIER RESILIENT GROQ ENGINE         │  │         PERSISTENCE & SECURITY       │
+│         TWO-TIER RESILIENT GROQ ENGINE       │  │         DATABASE & SERVICES          │
 │                                              │  │                                      │
-│  Primary:  openai/gpt-oss-120b (120B Params) │  │  MongoDB Atlas:                      │
-│            connect=2.5s | read=9.0s          │  │  ├── users (Auth, Tier, Quotas)      │
-│                     │                        │  │  ├── style_genomes (Cadence, Hab.)   │
-│         [Failover Timeout / HTTP 429]        │  │  ├── rewrites (History, Evals, Diff) │
-│                     ▼                        │  │  └── drills (Psycholinguistic Logs)  │
-│  Fallback: openai/gpt-oss-20b (20B Params)   │  │                                      │
-│            connect=2.0s | read=8.0s          │  │  Razorpay: HMAC-SHA256 Signatures    │
-│                                              │  │  Sentry: Agent Tracing & Latency     │
+│  Primary:  openai/gpt-oss-120b               │  │  MongoDB Atlas:                      │
+│            Deep reasoning & style matching   │  │  ├── users (auth & quotas)           │
+│                     │                        │  │  ├── style_genomes (voice profiles)  │
+│             [Fast Failover]                  │  │  ├── rewrites (history & diffs)      │
+│                     ▼                        │  │  └── drills (calibration logs)       │
+│  Fallback: openai/gpt-oss-20b                │  │                                      │
+│            Instant backup if primary times   │  │  Razorpay: Secure subscription checkout│
+│            out or hits rate limits           │  │  Sentry: Performance & error tracking│
 └──────────────────────────────────────────────┘  └──────────────────────────────────────┘
 ```
 
 ---
 
-### Pipeline 1: 4-Stage Sequential Rewrite & Meaning Guardrail (`/api/v1/rewrite`)
+### Pipeline 1: Rewriting & Fact-Checking (`/api/v1/rewrite`)
 
 ```text
-[User Submits Draft or Bullets (<500 words)]
+[User Submits Draft or Bullets]
         │
         ▼
-[Lazy Quota Verification Engine (backend/app/services/quota.py)]
- ├── Checks if current timestamp > lastWeekReset (Monday 00:00:00 UTC)
- ├── If true: lazily resets wordsUsedThisWeek = 0 in-flight (zero cron overhead)
- └── Verifies user quota (Free Tier: 1,500 words/day or 5,000/wk | Pro: Unlimited)
+[Quota Check (backend/app/services/quota.py)]
+ ├── Checks if a new calendar week has started (Monday 00:00 UTC)
+ ├── Resets weekly word count automatically with zero background cron jobs
+ └── Verifies user quota (Free Tier vs Pro Tier)
         │
         ▼
 [Stage 1: Ingestion & Expansion (backend/app/services/pipeline.py)]
- ├── Raw text draft: passes directly through with intact formatting
- └── Bullet points: calls Groq LLM with neutral drafting prompt
+ ├── Raw text: passes through with original formatting intact
+ └── Bullet points: expanded into a clean draft
         │
         ▼
 [Stage 2: Tone Transformation (Style Genome Injection)]
- ├── Injects user's StyleGenome (avgSentenceLength, formalityOffset, transitionHabits)
- ├── Injects 2 raw exemplar anchors extracted during calibration drill
- └── Eradicates synthetic buzzwords ("delve", "tapestry", "moreover", "crucial")
+ ├── Injects your average sentence length, formality level, and transition words
+ ├── Uses real writing samples from your calibration drill as anchor references
+ └── Replaces robotic AI buzzwords with your natural phrasing
         │
         ▼
-[Stage 3: Semantic Meaning Verification Gate (Semantic Fidelity >= 85%)]
- ├── Evaluates factual consistency between original input and transformed draft
- ├── Returns JSON: { "meaning_preserved": bool, "semantic_score": float, "drift_reason": str }
+[Stage 3: Meaning Verification Gate]
+ ├── Compares original text against the rewrite to check if facts match
  │
- ├── [Branch A: Passed (Score >= 85%)] ──► Advances directly to Stage 4
+ ├── [Facts Preserved] ──► Advances to Stage 4
  │
- └── [Branch B: Drift Detected (< 85%)]
+ └── [Factual Drift Detected]
       │
       ▼
-   [Reason-Aware Retry Loop (temperature = 0.3)]
-    ├── Re-executes Stage 2 with exact drift_reason injected into system prompt:
-    │   "CRITICAL CORRECTION REQUIRED: Previous attempt distorted: {drift_reason}"
+   [Guided Correction Retry]
+    ├── Re-runs Stage 2 with the exact mistake explained in the prompt
     │
-    ├── [Retry Passed (Score >= 85%)] ──► Advances to Stage 4
+    ├── [Retry Successful] ──► Advances to Stage 4
     │
-    └── [Retry Failed] ──► Proceeds to Stage 4 with { meaningCheckFailed: true }
-                           (Soft amber warning banner in UI; live session never crashes)
+    └── [Still Uncertain]  ──► Completes rewrite with an amber warning badge
+                               (You get your draft immediately; demo never crashes)
         │
         ▼
-[Stage 4: Light Grammar Pass (Punctuation Invariant)]
- ├── Corrects subject-verb agreement and typos that break basic syntax
- └── INVARIANT: Explicitly preserves em-dashes, semicolons, conversational commas, and pauses
+[Stage 4: Light Grammar Polish]
+ ├── Fixes accidental typos and subject-verb mismatches
+ └── Strict Rule: Leaves your em-dashes, commas, and conversational pauses untouched
         │
         ▼
-[Automated Evaluation & Telemetry (backend/app/services/evals.py)]
- ├── Calculates SlopReductionScore, StyleAlignmentScore, SemanticFidelityScore, Burstiness
- ├── Persists rewrite record, diffs, and eval telemetry to MongoDB Atlas
- └── Emits Sentry transaction span with provider tags (groq_gpt_oss_120b vs fallback)
+[Output Ready]
+ ├── Shows side-by-side diffs and slop reduction highlights in Studio
+ └── Records rewrite telemetry in MongoDB
 ```
 
 ---
 
-### Pipeline 2: 3-Minute Psycholinguistic Voice Calibration Drill (`/api/v1/grill`)
+### Pipeline 2: 3-Minute Voice Calibration Drill (`/api/v1/grill`)
 
 ```text
-[User Launches Onboarding Drill (frontend/src/components/drill/)]
+[User Starts Calibration (frontend/src/components/drill/)]
         │
         ▼
-[Scenario 1: Stream of Consciousness (60s Timer)]
- ├── Pennebaker & King (1999) linguistic analysis
- └── Measures function-word ratios (pronouns, conjunctions) and raw clause velocity
+[Prompt 1: Stream of Consciousness (60s)]
+ └── Write whatever comes to mind; captures small words, pronouns, and natural speed
         │
         ▼
-[Scenario 2: Boston Cookie Theft Task (60s Timer)]
- ├── Goodglass & Kaplan (1972) diagnostic perceptual benchmark
- └── Analyzes observational order, spatial structuring, and adjective specificity
+[Prompt 2: Detail Description (60s)]
+ └── Describe a scene; measures how you organize details and use descriptive words
         │
         ▼
-[Scenario 3: Emotional Narrative (60s Timer)]
- ├── Labov & Waletzky (1967) narrative structure analysis
- └── Measures personal tension resolution, verb tense transitions, and cadence shifts
+[Prompt 3: Personal Story (60s)]
+ └── Tell a quick story; observes how you resolve tension and shift sentence pace
         │
         ▼
-[Backend Genome Extractor (backend/app/services/grill.py)]
- ├── Computes avgSentenceLength (words/sentence) and sentenceLengthVariance
- ├── Calculates formalityScore (1.0 to 10.0 scale) and vocabularyRichnessTTR (Type-Token Ratio)
- ├── Extracts authentic transitionHabits (e.g., "honestly", "look,", "at the same time")
- ├── Catalogs punctuationHabits (em-dash frequency, comma cadence, parentheses)
- ├── Builds 3 Context Profiles: work_formal (+1.5), academic_educator (+1.2), workplace_chat (-1.2)
- └── Stores baselineGenome and exemplar excerpts in MongoDB Atlas
+[Voice Profile Created (backend/app/services/grill.py)]
+ ├── Computes your baseline sentence length and sentence variety
+ ├── Measures vocabulary richness and identifies your go-to transition words
+ ├── Catalogs your punctuation habits (dashes, commas, parentheses)
+ ├── Builds context profiles: Work Formal, Academic, and Workplace Chat
+ └── Saves your Style Genome to MongoDB Atlas
 ```
 
 ---
 
-### Pipeline 3: Noise-Resistant Cross-Session Adaptive Learning (`/api/v1/rewrite/accept`)
+### Pipeline 3: Adaptive Learning (`/api/v1/rewrite/accept`)
 
 ```text
-[User Reviews Output in Studio & Makes Manual Edits]
+[User Edits Output in Studio & Clicks "Accept & Learn"]
         │
         ▼
-[User Clicks "Accept & Learn"]
-        │
-        ▼
-[Genome Safety Gate Check]
- ├── If meaningCheckFailed == True:
- │   └── HARD INVARIANT: Learning is blocked. Buffer rejected. Style Genome protected.
+[Safety Gate Check]
+ ├── Did this draft have a meaning warning?
+ │   ├── YES: Learning is paused for this draft to protect your profile from errors.
+ │   └── NO:  Proceed to analyze the edit.
  │
- └── If meaningCheckFailed == False:
-      │
-      ▼
-   [Buffer Ingestion (backend/app/services/adaptive.py)]
-    ├── Computes character-level Levenshtein diff between model output and user final edit
-    ├── Extracts recurring syntactic patterns and transition adjustments
-    ├── Appends edit snapshot to user's recentEditsBuffer
-    │
-    ▼
-   [Recurrence Filter (Threshold: >= 3 Unique Sessions)]
-    ├── Ignores one-off typographical corrections, isolated acronyms, and single-edit noise
-    ├── Identifies consistent stylistic shifts appearing across >= 3 distinct sessions
-    │   (e.g., author consistently shortens sentences by ~3 words or replaces "however" with "though")
-    │
-    ▼
-   [Genome Parameter Calibration]
-    ├── Incrementally updates StyleGenome metrics (damped parameter delta <= 10%/cycle)
-    ├── Logs evolution snapshot in evolutionHistory with timestamp and shift rationale
-    └── Visualized on frontend Writing Evolution Chart (Cadence & Burstiness over time)
+        ▼
+[Edit Analysis (backend/app/services/adaptive.py)]
+ ├── Computes the diff between what InkFlow wrote and what you edited
+ ├── Stores the edit pattern in a temporary buffer
+ │
+        ▼
+[Repeat Pattern Check]
+ ├── Ignores one-off typo fixes or unusual words used just once
+ ├── Looks for consistent writing habits that show up across multiple sessions
+ │   (for example: you always prefer shorter sentences or specific transition words)
+ │
+        ▼
+[Profile Update]
+ └── Gradually updates your Style Genome so your writing twin evolves with you
 ```
 
 ---
 
-## 🛠️ Core Engineering Implementations & Algorithmic Safeguards
+## 🛠️ Key Engineering Safeguards
 
-### 1. Decoupled Two-Tier Groq Model Failover Client (`providers.py`)
-- **Granular Timeouts**: The primary inference client (`openai/gpt-oss-120b`) enforces a strict **`connect=2.5s`** connection timeout and **`read=9.0s`** read timeout. If Groq LPU experiences cold starts, networking latency, or rate-limit throttling (`HTTP 429`), the client catches the exception within $2.5\text{s}$ and transparently fails over to `openai/gpt-oss-20b` (`connect=2.0s`, `read=8.0s`).
-- **Telemetry & Zero User Disruption**: When failover triggers, Sentry captures an automated warning breadcrumb (`Primary 120B failed, failing over to 20B`) with provider tags, returning valid content without crashing the client session.
+### 1. Two-Tier Groq Failover
+If the primary large model (`openai/gpt-oss-120b`) is slow to respond, cold-starts, or encounters rate limits, the backend automatically switches to `openai/gpt-oss-20b` in under a few seconds. The user never sees a timeout error.
 
-### 2. Reason-Aware Meaning Gate with Soft UI Fallback (`pipeline.py`)
-- **Semantic Fidelity Verification**: Stage 3 compares factual claims between the raw input and transformed prose. If semantic fidelity drops below $85\%$, it extracts a structured `drift_reason` (e.g., *"Dropped critical deadline date Friday 5 PM and altered downtime cause"*).
-- **1x Guided Correction Retry**: Stage 2 is re-executed once at low temperature (`temperature=0.3`), explicitly prepending the `drift_reason` as a critical constraint.
-- **Soft Warning State**: If verification fails after the retry, the system avoids throwing disruptive `HTTP 422` errors. It forwards the draft to Stage 4 and returns `{ "meaningCheckFailed": true, "meaningWarning": "..." }`. The frontend renders a distinct amber banner allowing the user to copy or manually adjust claims while **strictly disallowing genome learning**.
+### 2. Fact Protection & Soft Fallback
+If the model drops an important detail (like a deadline or number), it gets one guided retry with the mistake explicitly called out. If the model is still unsure, it flags the output with an amber warning banner. You can still copy the draft, but InkFlow pauses adaptive learning so flawed facts never corrupt your profile.
 
-### 3. Punctuation & Burstiness Invariance Kernel (`pipeline.py` & `evals.py`)
-- **Punctuation Protection Prompt**: Stage 4 enforces an unyielding invariant: *"Fix only broken grammatical structures and agreement. Retain the exact punctuation quirks, em-dashes, and conversational pauses of the input text."*
-- **Mathematical Burstiness Scoring**: Evaluates variance in sentence lengths using standard deviation $\sigma = \sqrt{\frac{1}{N}\sum(L_i - \mu)^2}$. Generic AI models exhibit flat, robotic rhythms ($\sigma < 4.0$); InkFlow preserves natural human burstiness ($\sigma \ge 12.0$).
+### 3. Punctuation Invariance
+Most grammar checkers aggressively strip em-dashes and commas to fit textbook rules. InkFlow's grammar pass is strictly instructed to fix genuine agreement errors while leaving your punctuation habits untouched.
 
-### 4. In-Flight Lazy Weekly Quota Reset Engine (`quota.py`)
-- **Zero Cron Infrastructure**: Eliminates external schedulers, Celery workers, and background daemon dependencies.
-- **Calendar Boundary Math**: Computes the exact beginning of the current week (`Monday 00:00:00 UTC`) on every incoming request:
-  $$\text{start\_of\_week} = (\text{now} - \text{timedelta}(\text{days}=\text{weekday})).\text{replace}(0, 0, 0, 0)$$
-  If `lastWeekReset < start_of_week`, the backend immediately resets `wordsUsedThisWeek = 0` and updates the timestamp in MongoDB Atlas in-flight.
+### 4. Zero-Cron Quota Resets
+Instead of relying on fragile background workers or cron daemons to reset word counts, InkFlow checks the calendar week (Monday 00:00 UTC) lazily whenever a request arrives. It resets in memory and writes the update in-flight.
 
-### 5. Wispr Flow Aesthetic & Craftsmanship Micro-Copy Cycler (`TransformationStudio.tsx`)
-- **Visual Design**: Built with warm porcelain (`#FAF9F6`), crisp milk-white container surfaces (`#FFFFFF`), whisper-thin borders (`#E7E5E0`), and warm citrus amber accents (`#F59E0B`).
-- **Progressive Loading Timeline**: During 2–4s inference cycles, the output container displays subtle shimmering pulses with phased micro-copy:
-  - `0s - 3s`: *"Matching sentence cadence and transition habits..."*
-  - `3s - 6s`: *"Filtering synthetic AI buzzwords (Groq 120B)..."*
-  - `6s - 9s`: *"Verifying factual fidelity..."*
-  - `9s+` *(Failover)*: *"Switching to resilient backup model (Groq 20B)..."*
+### 5. Smooth Studio Experience
+During generation, the Studio cycles honest, reassuring status messages (*"Matching sentence cadence..."*, *"Filtering AI buzzwords..."*, *"Verifying facts..."*) so wait time feels purposeful and intentional.
 
-### 6. Resilient Razorpay Web Checkout Integration (`UpgradeModal.tsx`)
-- **State Unblocking (`modal.ondismiss`)**: Instantly resets `isProcessing: false` and clears errors when the user closes or dismisses checkout, releasing all interface controls.
-- **Always-Clickable Controls**: The modal backdrop and close `(X)` button are never disabled, enabling force-closing even during network requests.
-- **Inline Error Reporting**: Replaces blocking browser `alert()` popups with inline error banners, preventing mobile tap-bleed loops.
+### 6. Clean Checkout Flow
+The Razorpay upgrade modal resets its loading state immediately whenever the user cancels or closes the window. The close button and backdrop can always be clicked, preventing frozen screens or tap loops on mobile.
 
 ---
 
-## 📊 System Performance & Engineering Benchmarks
+## 📊 Practical Highlights
 
-| Engineering Subsystem | Architectural Implementation | Measured Benchmark / Impact |
+| Feature | How It Works | What You Get |
 | :--- | :--- | :--- |
-| **Primary Groq 120B Inference** | Open-weight `openai/gpt-oss-120b` running on Groq LPU with dedicated connection timeouts. | **~1.8s - 2.4s** end-to-end latency for 500-word deep reasoning transformation. |
-| **Automated Failover Latency** | Decoupled client with `connect=2.5s / read=9.0s` failing over to `openai/gpt-oss-20b`. | Failover triggers within **$\le 2.5\text{s}$**; backup responds in **`<750ms`**. |
-| **Slop Eradication Rate** | Multi-token regex scanning across 35+ synthetic buzzwords + genome transition replacement. | **96.5% average slop reduction score** across diverse professional drafts. |
-| **Factual Semantic Gate** | Stage 3 JSON consistency verification + 1x reason-aware retry at `temperature=0.3`. | **98.4% semantic fidelity**; zero unverified claim drift entering Style Genome. |
-| **Punctuation & Cadence Preservation** | Dedicated Stage 4 invariant kernel prohibiting em-dash and conversational comma stripping. | **100% em-dash and semicolon retention**; burstiness variance maintained at **$\sigma \ge 13.2$**. |
-| **Lazy Quota Overhead** | In-flight UTC Monday boundary timestamp arithmetic (`datetime.now(timezone.utc)`). | **<0.1ms computation overhead**; 100% elimination of external cron dependencies. |
-| **Cross-Session Recurrence Filter** | $\ge 3$ session occurrence threshold before shifting baseline Style Genome parameters. | **0% genome corruption** from one-off user edits, typos, or single-session anomalies. |
+| **Dual Model Resilience** | Groq 120B primary with automated failover to 20B. | Deep reasoning when available, fast backup if busy. |
+| **Slop Eradication** | Detects synthetic clichés and replaces them with your natural transitions. | Writing that sounds like a real person, not a chatbot. |
+| **Fact-Checking Gate** | Compares draft claims against original points before finishing. | Catches hallucinations before you send your document. |
+| **Punctuation Protection** | Strict rules preventing the removal of dashes, commas, and pauses. | Keeps your unique voice and writing style intact. |
+| **Smart Adaptive Learning** | Only adopts habits that appear across multiple writing sessions. | One-off typo edits won't distort your long-term profile. |
+| **Automatic Quota Reset** | Checks calendar week in-flight every Monday at 00:00 UTC. | Quota resets work reliably without server cron jobs. |
 
 ---
 
-## 🧰 Tech Stack Breakdown
+## 🧰 Tech Stack
 
-```
-Frontend:
-├── Framework: React 19 / TypeScript / Vite 8
-├── Styling: Tailwind CSS 4 (Wispr Flow Porcelain Palette)
-├── Animations: Framer Motion / Canvas Confetti
-├── Icons: Lucide React
-├── State: Zustand (useStudioStore, useAuthStore)
-├── Auth: Firebase Authentication (Client Web SDK)
-└── Payments: Razorpay Checkout.js SDK
-
-Backend:
-├── Framework: FastAPI 0.115+ (Python 3.11+) / Uvicorn (ASGI)
-├── Database: MongoDB Atlas via Motor (AsyncIO driver)
-├── Inference: HTTPX Async Client (Decoupled Timeouts)
-├── Schemas: Pydantic v2 (BaseSettings, Field Validators)
-├── Security: PyJWT (HMAC-SHA256) & Firebase Admin SDK
-├── Payments: Razorpay Python SDK (HMAC-SHA256 Signature Verification)
-└── Observability: Sentry Python SDK (sentry-sdk[fastapi] with Agent Tracing)
-
-Inference & Open-Weight AI:
-├── Primary Engine: openai/gpt-oss-120b (Groq Cloud LPU)
-└── Fallback Engine: openai/gpt-oss-20b (Groq Cloud LPU)
-
-Infrastructure & Deployment:
-├── Web Service: Render.com (FastAPI / Uvicorn via render.yaml)
-├── Static Site: Vercel / Render Static Site (React SPA with rewrites)
-└── Database: MongoDB Atlas M0 Free / Dedicated Cluster
-```
+- **Frontend**: React 19, TypeScript, Vite 8, Tailwind CSS, Framer Motion, Lucide Icons, Canvas Confetti.
+- **Backend**: FastAPI (Python 3.11+), Uvicorn, Motor (Async MongoDB), Pydantic v2, HTTPX, Sentry SDK.
+- **AI Models**: `openai/gpt-oss-120b` (Primary) & `openai/gpt-oss-20b` (Fallback) via Groq Cloud.
+- **Database**: MongoDB Atlas (Users, Style Genomes, Rewrites, Drills).
+- **Auth & Payments**: Firebase Auth (Google & Email) & Razorpay Checkout.
+- **Hosting**: Render.com (Backend API & Frontend) and Vercel.
 
 ---
 
-## 🚀 Quick Start & Local Development
+## 🚀 Quick Start & Local Setup
 
 ### Prerequisites
-- **Python**: 3.11 or higher
-- **Node.js**: 20.x or higher (`npm` 10+)
-- **MongoDB**: Local MongoDB instance (`mongodb://localhost:27017`) or free MongoDB Atlas URI
-- **Groq API Key**: Free API key from [console.groq.com](https://console.groq.com)
+- **Python**: 3.11+
+- **Node.js**: 20+ (`npm` 10+)
+- **MongoDB**: Local instance or a free MongoDB Atlas URI
+- **Groq API Key**: Free key from [console.groq.com](https://console.groq.com)
 
 ---
 
 ### 1. Backend Setup (`FastAPI`)
 
 ```bash
-# Navigate to backend directory
 cd backend
 
-# Create and activate virtual environment
+# Create virtual environment
 python -m venv .venv
 
-# On Windows (PowerShell):
+# Activate on Windows (PowerShell):
 .venv\Scripts\Activate.ps1
-# On macOS/Linux:
+# Activate on macOS/Linux:
 # source .venv/bin/activate
 
 # Install dependencies
 pip install -r requirements.txt
 
-# Create environment configuration
+# Set up your environment file
 cp .env.example .env
 ```
 
-Configure your `backend/.env`:
+Add your keys to `backend/.env`:
 ```env
 PROJECT_NAME="InkFlow API"
 ENVIRONMENT="development"
 DEBUG=True
 API_V1_STR="/api/v1"
 
-SECRET_KEY="your-secure-random-32-byte-secret"
-ALGORITHM="HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES=10080
-
-# Database (Local or Atlas)
+SECRET_KEY="your-secret-key-for-development"
 MONGODB_URI="mongodb://localhost:27017"
 MONGODB_DB_NAME="inkflow"
 
-# Groq Two-Tier Engine
+# Groq API
 GROQ_BASE_URL="https://api.groq.com/openai/v1"
-GROQ_API_KEY="gsk_your_groq_api_key_here"
+GROQ_API_KEY="gsk_your_groq_api_key"
 GROQ_PRIMARY_MODEL="openai/gpt-oss-120b"
 GROQ_FALLBACK_MODEL="openai/gpt-oss-20b"
 
-PRIMARY_CONNECT_TIMEOUT=2.5
-PRIMARY_READ_TIMEOUT=9.0
-FALLBACK_CONNECT_TIMEOUT=2.0
-FALLBACK_READ_TIMEOUT=8.0
-
-# Quota Limits
+# Quotas
 FREE_TIER_DAILY_WORD_LIMIT=1500
 FREE_TIER_WEEKLY_WORD_LIMIT=5000
 
-# Payments (Razorpay Test Keys)
+# Razorpay Test Keys
 PAYMENT_PROVIDER="razorpay"
 RAZORPAY_KEY_ID="rzp_test_your_key_id"
 RAZORPAY_KEY_SECRET="your_key_secret"
@@ -351,44 +299,40 @@ RAZORPAY_KEY_SECRET="your_key_secret"
 CORS_ORIGINS="http://localhost:3000,http://localhost:5173,https://ink-flow-twin.vercel.app"
 ```
 
-Start the backend API server:
+Start the backend:
 ```bash
 uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 ```
-Interactive API Swagger documentation is now accessible at `http://localhost:8000/docs`.
+Interactive API documentation will be available at `http://localhost:8000/docs`.
 
 ---
 
 ### 2. Frontend Setup (`React + Vite`)
 
 ```bash
-# In a separate terminal, navigate to frontend directory
 cd frontend
 
-# Install npm dependencies
+# Install dependencies
 npm install
 
-# Create environment configuration
+# Set up environment file
 cp .env.example .env
 ```
 
-Configure your `frontend/.env`:
+Add your keys to `frontend/.env`:
 ```env
 VITE_API_URL=http://localhost:8000/api/v1
 
-# Firebase Auth (Web App Keys)
+# Firebase Auth
 VITE_FIREBASE_API_KEY="your_firebase_api_key"
 VITE_FIREBASE_AUTH_DOMAIN="your-app.firebaseapp.com"
 VITE_FIREBASE_PROJECT_ID="your-project-id"
-VITE_FIREBASE_STORAGE_BUCKET="your-app.firebasestorage.app"
-VITE_FIREBASE_MESSAGING_SENDER_ID="your_sender_id"
-VITE_FIREBASE_APP_ID="your_app_id"
 
-# Razorpay Client Key ID
+# Razorpay Test Key
 VITE_RAZORPAY_KEY_ID="rzp_test_your_key_id"
 ```
 
-Start the frontend development server:
+Start the frontend:
 ```bash
 npm run dev
 ```
@@ -396,57 +340,32 @@ Open your browser at `http://localhost:5173`.
 
 ---
 
-## 🧪 Test Suite & Verification
+## 🧪 Running Tests
 
-The repository contains an exhaustive automated test suite covering all architectural subsystems:
-
+Run the backend test suite:
 ```bash
-# Run all 45 backend test suites (Providers, Pipeline, Evals, Quota, Adaptive, Payments, Security)
-pytest backend/tests -v
+pytest backend/tests
 ```
+All unit and integration tests (providers, pipeline, evals, quota, adaptive learning, payments) will run and report passing.
 
-Expected output:
-```text
-============================= test session starts =============================
-platform win32 -- Python 3.11+, pytest-9.1.1, pluggy-1.6.0
-collected 45 items
-
-backend/tests/test_adaptive.py .....                                     [ 11%]
-backend/tests/test_evals.py ....                                         [ 20%]
-backend/tests/test_grammar_pass.py ...                                   [ 26%]
-backend/tests/test_grill.py ..                                           [ 31%]
-backend/tests/test_payments.py .......                                   [ 46%]
-backend/tests/test_pipeline.py ......                                    [ 60%]
-backend/tests/test_providers.py .......                                  [ 75%]
-backend/tests/test_quota.py .......                                      [ 91%]
-backend/tests/test_security.py ....                                      [100%]
-
-============================= 45 passed in 1.73s ==============================
-```
-
-Verify frontend build integrity:
+Check frontend build:
 ```bash
 npm --prefix frontend run build
 ```
 
-Expected output:
-```text
-✓ built in 3.50s (0 errors, 0 type issues)
-```
-
 ---
 
-## 🛡️ Data Sovereignty & Security Architecture
+## 🛡️ Privacy & Data Security
 
-1. **Zero-Retention Inference**: Inputs, drafts, and voice profiles are submitted solely to open-weight models via encrypted HTTPS channels. No training payloads, prompts, or stylistic embeddings are retained by the foundation model provider.
-2. **Bearer Token Authentication**: API routes enforce authentication via `HTTPBearer`. Incoming requests verify signed Firebase ID tokens or HMAC-SHA256 test tokens, extracting claims and rejecting forged authorizations with `HTTP 401`.
-3. **Cryptographic Payment Verification**: Upgrade endpoints require authentic Razorpay HMAC-SHA256 signature verification computed from `razorpay_order_id + "|" + razorpay_payment_id` against `RAZORPAY_KEY_SECRET` before elevating any user privileges to Pro tier.
-4. **Isolated Client Storage**: Session state, authentication tokens, and draft buffers are isolated to client-side memory and localStorage, wiped cleanly upon sign-out.
+- **Zero Data Retention**: Your text is sent directly to open-weight models via encrypted connections and is never used to train future foundation models.
+- **Secure Token Checks**: API endpoints verify signed Firebase ID tokens, rejecting unauthorized requests.
+- **Cryptographic Payments**: Subscriptions are verified with HMAC-SHA256 signatures before activating Pro features.
+- **Clean Local Sessions**: All draft buffers and authentication tokens are stored in your browser session and cleared completely on sign-out.
 
 ---
 
 ## 📜 License
 
-Distributed under the **MIT License**. See [`LICENSE`](./LICENSE) for full details.
+Distributed under the **MIT License**. See [`LICENSE`](./LICENSE) for details.
 
-Developed with ❤️ by [Soumya Ghosh](https://github.com/SoumyaGhosh2006).
+Created with ❤️ by [Soumya Ghosh](https://github.com/SoumyaGhosh2006).
